@@ -7,7 +7,13 @@
 	{% if course_list %}
 	<ul class="courses">
 		{% for course in course_list %}
-			<li>{{ course.name }}</li>
+            <li>
+                <a href="{% url 'course' course.id %}">{{ course.name }}</a>
+                <div  class="course-controls">
+                    <a href="{%url 'course-delete' course.id %}"><i class="bi bi-trash"></i> </a>
+					<a href="{%url 'course-update' course.id %}"><i class="bi bi-pencil-square"></i></a>
+                </div>
+            </li>
 		{% endfor %}
 	{% else %}
 		<p>No courses found.</p>

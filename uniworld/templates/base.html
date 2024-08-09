@@ -14,13 +14,21 @@
             <div class="container">
                 <a href="{%url 'home'%}" class="logo">UniWorld</a>
                 <nav class="nav">
-                	<a href="{%url 'home'%}"><i class="bi bi-house-fill"></i> Home</a>
                 	<a href="{% url 'courses' %}"><i class="bi bi-list-task"></i> Courses</a>
+                    <a href="{% url 'course-create' %}"><i class="bi bi-plus-circle"></i> Create Course</a>
                 </nav>
             </div>
         </header>
         <main>
             <div class="container">
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{message.tags}}">
+                            {{message}}
+                        </div>
+                    {% endfor %}
+				{% endif %}
+
                 {%block content %}
                 {%endblock content%}
             </div>

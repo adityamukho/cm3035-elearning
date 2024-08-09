@@ -1,0 +1,16 @@
+{%extends 'base.html'%}
+
+{%block content%}
+<div class="center">
+	<form method="post" class="card">
+		{% csrf_token %}
+		<h2>Delete Course</h2>
+		<p>Are you sure that you want to delete "{{course}}"?</p>
+		<p class="form-buttons">
+			<input type="submit" class="btn btn-primary" value="Delete">
+			<a href="{% url 'courses'%}" class="btn btn-outline">Cancel</a>
+		</p>
+	</form>
+</div>
+
+{%endblock content%}

@@ -185,15 +185,15 @@ textarea {
   max-height: 7rem;
 }
 
-/* Task list */
+/* Course list */
 
-.tasks {
+.courses {
   list-style: none;
   width: 100%;
   max-width: 450px;
 }
 
-.tasks li {
+.courses li {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -201,23 +201,23 @@ textarea {
   border-bottom: solid 1px var(--color-dark);
   padding: 0.5rem 0;
 }
-.tasks li:last-of-type {
+.courses li:last-of-type {
   border-bottom: none;
 }
 
-.task-controls {
+.course-controls {
   display: flex;
   justify-content: space-between;
   gap: 1rem;
 }
 
-.task-controls a {
+.course-controls a {
   color: var(--color-dark);
 }
 
-/* task detail */
+/* course detail */
 
-.task {
+.course {
   margin-bottom: auto;
 }
 
