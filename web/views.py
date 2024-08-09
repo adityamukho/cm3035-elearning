@@ -1,5 +1,10 @@
 from django.http import HttpResponse
+from django.shortcuts import render
 
 
-def index(request):
-    return HttpResponse("Hello, world. You're at the web index.")
+def heartbeat(request):
+    return HttpResponse("alive")
+
+
+def home(request):
+    return render(request,'home.html')
