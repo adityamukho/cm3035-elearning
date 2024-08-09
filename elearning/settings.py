@@ -37,8 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    "api.apps.ApiConfig",
-    "web.apps.WebConfig"
+    "uniworld.apps.WebConfig"
 ]
 
 MIDDLEWARE = [

@@ -1,7 +1,12 @@
+from django.http import HttpResponse
 from django.shortcuts import render
 from django.views.generic.list import ListView
 
-from api.models import Course
+from uniworld.models import Course
+
+
+def heartbeat(request):
+    return HttpResponse("alive")
 
 
 def home(request):

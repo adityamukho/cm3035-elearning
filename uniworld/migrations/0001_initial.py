@@ -36,15 +36,15 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Student',
             fields=[
-                ('profile_ptr', models.OneToOneField(auto_created=True, on_delete=django.db.models.deletion.CASCADE, parent_link=True, primary_key=True, serialize=False, to='api.profile')),
+                ('profile_ptr', models.OneToOneField(auto_created=True, on_delete=django.db.models.deletion.CASCADE, parent_link=True, primary_key=True, serialize=False, to='uniworld.profile')),
             ],
-            bases=('api.profile',),
+            bases=('uniworld.profile',),
         ),
         migrations.CreateModel(
             name='Teacher',
             fields=[
-                ('profile_ptr', models.OneToOneField(auto_created=True, on_delete=django.db.models.deletion.CASCADE, parent_link=True, primary_key=True, serialize=False, to='api.profile')),
+                ('profile_ptr', models.OneToOneField(auto_created=True, on_delete=django.db.models.deletion.CASCADE, parent_link=True, primary_key=True, serialize=False, to='uniworld.profile')),
             ],
-            bases=('api.profile',),
+            bases=('uniworld.profile',),
         ),
     ]
