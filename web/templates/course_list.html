@@ -1,0 +1,17 @@
+{%extends 'base.html' %}
+
+{%block content%}
+
+<div class="center">
+	<h2>Courses</h2>
+	{% if course_list %}
+	<ul class="courses">
+		{% for course in course_list %}
+			<li>{{ course.name }}</li>
+		{% endfor %}
+	{% else %}
+		<p>No courses found.</p>
+	{% endif %}
+	</ul>
+</div>
+{%endblock content%}
