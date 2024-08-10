@@ -1,6 +1,6 @@
 # Uniworld - An E-Learning Portal
 
-## CM3035 Final Project
+## CM3035 Coursework 2
 
 ![PyLint](https://github.com/adityamukho/cm3035-elearning/actions/workflows/pylint.yml/badge.svg)
 &nbsp;
