@@ -1,7 +1,16 @@
 asgiref==3.8.1
+astroid==3.2.4
+dill==0.3.8
 Django==5.0.7
 gunicorn==22.0.0
+isort==5.13.2
+mccabe==0.7.0
 packaging==24.1
 pillow==10.4.0
+platformdirs==4.2.2
+pylint==3.2.6
+pylint-django==2.5.5
+pylint-plugin-utils==0.8.2
 sqlparse==0.5.1
+tomlkit==0.13.0
 whitenoise==6.7.0
