@@ -6,7 +6,7 @@
 &nbsp;
 ![Django CI](https://github.com/adityamukho/cm3035-elearning/actions/workflows/django.yml/badge.svg)
 
-This student project was developed for submission in an online course. It is not meant for production use.
+This student project was developed for submission in an online course. **It is not meant for production use.**
 
 ## Demo
 
