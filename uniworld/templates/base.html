@@ -17,7 +17,7 @@
                     {% if request.user.is_authenticated %}
                         <a href="{% url 'courses' %}"><i class="bi bi-list-task"></i> Courses</a>
                         <a href="{% url 'course-create' %}"><i class="bi bi-plus-circle"></i> Create Course</a>
-                        <a href="#">Hi {{request.user | title}}</a>
+                        <a href="{% url 'profile' %}" title="Update my profile">Hi {{request.user | title}}</a>
                         <form method="post" class="inline" action="{% url 'logout' %}">
                             {% csrf_token %}
                             <input type="submit" value="Logout" class="btn btn-outline">
@@ -45,7 +45,9 @@
             </div>
         </main>
         <footer class="footer">
-            <div class="container"></div>
+            <div class="container">
+                <p>© Copyright {% now "Y" %} by <a href="https://adityamukho.com">Aditya Mukhopadhyay</a></p>
+            </div>
         </footer>
     </body>
 </html>

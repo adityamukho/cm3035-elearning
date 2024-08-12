@@ -30,6 +30,7 @@ body {
 img {
   max-width: 100%;
 }
+
 input,
 button,
 textarea {
@@ -39,6 +40,7 @@ textarea {
 input[type='text']:focus,
 input[type='email']:focus,
 input[type='password']:focus,
+input[type='file']:focus,
 textarea:focus {
   outline: 0;
   box-shadow:  0 0 0 0.125rem rgb(0 209 178 / 25%);
@@ -87,7 +89,7 @@ a:hover {
   display: flex;
   align-items: center;
   gap:1rem;
-  
+
 }
 
 .nav {
@@ -103,7 +105,7 @@ a:hover {
 .nav a:nth-last-child(2) {
 	margin-left: auto;
 	font-weight: bold;
-} 
+}
 
 
 .logo {
@@ -174,6 +176,7 @@ hr {
 input[type='text'],
 input[type='email'],
 input[type='password'],
+input[type='file'],
 textarea {
   border-radius: var(--border-radius);
   border: solid 1px var(--color-gray);
@@ -185,15 +188,15 @@ textarea {
   max-height: 7rem;
 }
 
-/* Course list */
+/* Task list */
 
-.courses {
+.tasks {
   list-style: none;
   width: 100%;
   max-width: 450px;
 }
 
-.courses li {
+.tasks li {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -201,23 +204,23 @@ textarea {
   border-bottom: solid 1px var(--color-dark);
   padding: 0.5rem 0;
 }
-.courses li:last-of-type {
+.tasks li:last-of-type {
   border-bottom: none;
 }
 
-.course-controls {
+.task-controls {
   display: flex;
   justify-content: space-between;
   gap: 1rem;
 }
 
-.course-controls a {
+.task-controls a {
   color: var(--color-dark);
 }
 
-/* course detail */
+/* task detail */
 
-.course {
+.task {
   margin-bottom: auto;
 }
 
@@ -227,6 +230,12 @@ textarea {
   color: var(--color-white);
   border-radius: 2rem;
   align-self: flex-start;
+}
+
+.avatar {
+	display:block;
+	margin:0 auto;
+	max-width:150px;
 }
 
 .badge-completed {
@@ -327,7 +336,7 @@ textarea {
   min-height: 70vh;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 576px) {
   .header > .container {
     display: flex;
     flex-direction: column;
@@ -360,3 +369,4 @@ textarea {
     align-self: center;
   }
 }
+
