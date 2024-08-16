@@ -1,10 +1,11 @@
+from django.contrib import messages
 from django.http import HttpResponse
 from django.shortcuts import render
-from django.views.generic.list import ListView
+from django.urls import reverse_lazy
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
-from django.contrib import messages
-from django.urls import reverse_lazy
+from django.views.generic.list import ListView
+from rules.contrib.views import AutoPermissionRequiredMixin
 
 from uniworld.models import Course
 
@@ -27,7 +28,7 @@ class CourseDetailView(DetailView):
     context_object_name = 'course'
 
 
-class CourseCreateView(CreateView):
+class CourseCreateView(AutoPermissionRequiredMixin, CreateView):
     model = Course
     fields = ['name', 'description']
     success_url = reverse_lazy('courses')
@@ -39,7 +40,7 @@ class CourseCreateView(CreateView):
         return super(CourseCreateView, self).form_valid(form)
 
 
-class CourseUpdateView(UpdateView):
+class CourseUpdateView(AutoPermissionRequiredMixin, UpdateView):
     model = Course
     fields = ['name', 'description']
     success_url = reverse_lazy('courses')
@@ -50,7 +51,7 @@ class CourseUpdateView(UpdateView):
         return super(CourseUpdateView, self).form_valid(form)
 
 
-class CourseDeleteView(DeleteView):
+class CourseDeleteView(AutoPermissionRequiredMixin, DeleteView):
     model = Course
     context_object_name = 'course'
     success_url = reverse_lazy('courses')

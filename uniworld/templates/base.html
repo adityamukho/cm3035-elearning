@@ -1,53 +1,58 @@
-{%load static %}
+{% load static %}
+{% load rules %}
+
+{% has_perm 'uniworld.add_course' request.user as can_add_course %}
 
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <link rel="stylesheet" href="{% static 'css/style.css' %}" />
-        <title>E-Learning App</title>
-    </head>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}"/>
+    <title>E-Learning App</title>
+</head>
 
-    <body>
-        <header class="header">
-            <div class="container">
-                <a href="{%url 'home'%}" class="logo">Uniworld</a>
-                <nav class="nav">
-                    {% if request.user.is_authenticated %}
-                        <a href="{% url 'courses' %}"><i class="bi bi-list-task"></i> Courses</a>
-                        <a href="{% url 'course-create' %}"><i class="bi bi-plus-circle"></i> Create Course</a>
-                        <a href="{% url 'profile' %}" title="Update my profile">Hi {{request.user | title}}</a>
-                        <form method="post" class="inline" action="{% url 'logout' %}">
-                            {% csrf_token %}
-                            <input type="submit" value="Logout" class="btn btn-outline">
-                        </form>
-{#                        <a href="{% url 'logout' %}" class="btn btn-outline">Logout</a>#}
-                    {% else %}
-                        <a href="{% url 'login' %}" class="btn btn-outline">Login</a>
-                        <a href="{%url 'register'%}" class="btn btn-primary">Join Now</a>
-	                {% endif %}
-                </nav>
-            </div>
-        </header>
-        <main>
-            <div class="container">
-                {% if messages %}
-                    {% for message in messages %}
-                        <div class="alert alert-{{message.tags}}">
-                            {{message}}
-                        </div>
-                    {% endfor %}
-				{% endif %}
+<body>
+<header class="header">
+    <div class="container">
+        <a href="{% url 'home' %}" class="logo">Uniworld</a>
+        <nav class="nav">
+            {% if request.user.is_authenticated %}
+                <a href="{% url 'courses' %}"><i class="bi bi-list-task"></i> Courses</a>
+                {% if can_add_course %}
+                    <a href="{% url 'course-create' %}"><i class="bi bi-plus-circle"></i> Create Course</a>
+                {% endif %}
+                <a href="{% url 'profile' %}" title="Update my profile">Hi {{ request.user | title }}</a>
+                <form method="post" class="inline" action="{% url 'logout' %}">
+                    {% csrf_token %}
+                    <input type="submit" value="Logout" class="btn btn-outline">
+                </form>
+                {#                        <a href="{% url 'logout' %}" class="btn btn-outline">Logout</a>#}
+            {% else %}
+                <a href="{% url 'login' %}" class="btn btn-outline">Login</a>
+                <a href="{% url 'register' %}" class="btn btn-primary">Join Now</a>
+            {% endif %}
+        </nav>
+    </div>
+</header>
+<main>
+    <div class="container">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
 
-                {%block content %}
-                {%endblock content%}
-            </div>
-        </main>
-        <footer class="footer">
-            <div class="container">
-                <p>© Copyright {% now "Y" %} by <a href="https://adityamukho.com">Aditya Mukhopadhyay</a></p>
-            </div>
-        </footer>
-    </body>
+        {% block content %}
+        {% endblock content %}
+    </div>
+</main>
+<footer class="footer">
+    <div class="container">
+        <p>© Copyright {% now "Y" %} by <a href="https://adityamukho.com">Aditya Mukhopadhyay</a></p>
+    </div>
+</footer>
+</body>
 </html>
