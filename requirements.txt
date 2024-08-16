@@ -2,6 +2,8 @@ asgiref==3.8.1
 astroid==3.2.4
 dill==0.3.8
 Django==5.0.7
+factory-boy==3.3.0
+Faker==27.0.0
 gunicorn==22.0.0
 isort==5.13.2
 mccabe==0.7.0
@@ -11,6 +13,9 @@ platformdirs==4.2.2
 pylint==3.2.6
 pylint-django==2.5.5
 pylint-plugin-utils==0.8.2
+python-dateutil==2.9.0.post0
+rules==3.4
+six==1.16.0
 sqlparse==0.5.1
 tomlkit==0.13.0
 whitenoise==6.7.0
