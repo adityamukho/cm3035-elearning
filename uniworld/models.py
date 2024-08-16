@@ -1,10 +1,23 @@
+from django.contrib.auth.models import User
+from django.core.exceptions import PermissionDenied
 from django.db import models
+from rules import Predicate, is_group_member
+from rules.contrib.models import RulesModel
+
+is_course_author = Predicate(lambda user, course: course.user == user)
 
 
-# Create your models here.
-class Course(models.Model):
+class Course(RulesModel):
+    class Meta:
+        rules_permissions = {
+            'add': is_group_member('teachers'),
+            'change': is_course_author,
+            'delete': is_course_author,
+        }
+
     name = models.CharField(max_length=200)
     description = models.TextField()
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
