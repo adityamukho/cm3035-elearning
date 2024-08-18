@@ -38,7 +38,6 @@ INSTALLED_APPS = [
     "uniworld.apps.WebConfig",
     "users.apps.UsersConfig",
     "rules.apps.RulesConfig",
-    "django_nextjs.apps.DjangoNextJSConfig",
 ]
 
 MIDDLEWARE = [
