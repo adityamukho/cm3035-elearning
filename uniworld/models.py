@@ -1,5 +1,4 @@
 from django.contrib.auth.models import User
-from django.core.exceptions import PermissionDenied
 from django.db import models
 from rules import Predicate, is_group_member
 from rules.contrib.models import RulesModel
