@@ -22,12 +22,12 @@
                 {% if can_add_course %}
                     <a href="{% url 'course-create' %}"><i class="bi bi-plus-circle"></i> Create Course</a>
                 {% endif %}
+                <a href="{% url 'rooms' %}"><i class="bi bi-list-task"></i> Rooms</a>
                 <a href="{% url 'profile' %}" title="Update my profile">Hi {{ request.user | title }}</a>
                 <form method="post" class="inline" action="{% url 'logout' %}">
                     {% csrf_token %}
                     <input type="submit" value="Logout" class="btn btn-outline">
                 </form>
-                {#                        <a href="{% url 'logout' %}" class="btn btn-outline">Logout</a>#}
             {% else %}
                 <a href="{% url 'login' %}" class="btn btn-outline">Login</a>
                 <a href="{% url 'register' %}" class="btn btn-primary">Join Now</a>

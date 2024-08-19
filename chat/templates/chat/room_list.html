@@ -1,0 +1,23 @@
+{%extends 'base.html' %}
+
+{%block content%}
+
+<div class="center">
+	<h2>Rooms</h2>
+	{% if room_list %}
+	<ul class="rooms">
+		{% for room in room_list %}
+            <li>
+                <a href="{% url 'room' room.id %}">{{ room.name }}</a>
+                <div  class="room-controls">
+{#                    <a href="{%url 'room-delete' room.id %}"><i class="bi bi-trash"></i> </a>#}
+{#					<a href="{%url 'room-update' room.id %}"><i class="bi bi-pencil-square"></i></a>#}
+                </div>
+            </li>
+		{% endfor %}
+	{% else %}
+		<p>No rooms found.</p>
+	{% endif %}
+	</ul>
+</div>
+{%endblock content%}
