@@ -1,12 +1,12 @@
-{%extends 'base.html'%}
+{% extends 'base.html' %}
 
-{%block content%}
+{% block content %}
 
- <article class="task">
-	<header>
-		<h2>{{ course.name }}</h2>
-	</header>
-	<p>{{course.description}}</p>
-</article>
+    <article class="task">
+        <header>
+            <h2>{{ course.name }}</h2>
+        </header>
+        <p>{{ course.description }}</p>
+    </article>
 
-{%endblock content%}
+{% endblock content %}

@@ -1,4 +1,5 @@
 {%extends 'base.html' %}
+{% load rules %}
 
 {%block content%}
 
@@ -10,8 +11,14 @@
             <li>
                 <a href="{% url 'course' course.id %}">{{ course.name }}</a>
                 <div  class="course-controls">
-                    <a href="{%url 'course-delete' course.id %}"><i class="bi bi-trash"></i> </a>
-					<a href="{%url 'course-update' course.id %}"><i class="bi bi-pencil-square"></i></a>
+                    {% has_perm 'uniworld.delete_course' request.user course as can_delete_course %}
+                    {% if can_delete_course %}
+                        <a href="{%url 'course-delete' course.id %}"><i class="bi bi-trash"></i> </a>
+                    {% endif %}
+                    {% has_perm 'uniworld.change_course' request.user course as can_change_course %}
+                    {% if can_change_course %}
+                        <a href="{%url 'course-update' course.id %}"><i class="bi bi-pencil-square"></i></a>
+                    {% endif %}
                 </div>
             </li>
 		{% endfor %}
