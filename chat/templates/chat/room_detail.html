@@ -20,6 +20,7 @@
                     <div class="media">
                         <div class="media-body">
                             <form method="post" action="." id="chat-message-form">
+                                {% csrf_token %}
                                 <div class="form-group">
                                     <label for="chat-message-input">Message</label>
                                     <input type="text" name="content" id="chat-message-input" class="form-control"
