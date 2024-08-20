@@ -22,7 +22,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-+907x9*p47ln6a5f05-*9@)hqj+!y=b%zj0bm(e2qf$hmkytfa'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DEBUG', False)
 
 ALLOWED_HOSTS = ['localhost', 'cm3035-elearning.onrender.com']
 
@@ -157,12 +157,22 @@ MEDIA_URL = '/media/'
 # }
 
 ASGI_APPLICATION = "elearning.asgi.application"
-CHANNEL_LAYERS = {
-    'default': {
-        # 'BACKEND': 'channels.layers.InMemoryChannelLayer',
-        'BACKEND': 'channels_redis.core.RedisChannelLayer',
-        'CONFIG': {
-            'hosts': [('localhost', 6379)],
+
+if DEBUG:
+    CHANNEL_LAYERS = {
+        'default': {
+            'BACKEND': 'channels.layers.InMemoryChannelLayer',
         },
-    },
-}
+    }
+else:
+    redis_backend_host = os.environ.get('REDIS_BACKEND_HOST', 'localhost')
+    redis_backend_port = os.environ.get('REDIS_BACKEND_PORT', 6379)
+
+    CHANNEL_LAYERS = {
+        'default': {
+            'BACKEND': 'channels_redis.core.RedisChannelLayer',
+            'CONFIG': {
+                'hosts': [(redis_backend_host, redis_backend_port)],
+            },
+        },
+    }
