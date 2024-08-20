@@ -9,7 +9,9 @@
         <div class="row">
             <div class="col-8 offset-2">
                 <div class="box messages" id="chat-messages">
-                    Messages will be displayed here...
+                    {% for m in message_list %}
+                        <b>{{ m.user.username }}</b>: {{ m.content }}<br>
+                    {% endfor %}
                 </div>
             </div>
 
@@ -17,15 +19,15 @@
                 <div class="box">
                     <div class="media">
                         <div class="media-body">
-                            <form method="post" action=".">
+                            <form method="post" action="." id="chat-message-form">
                                 <div class="form-group">
                                     <label for="chat-message-input">Message</label>
                                     <input type="text" name="content" id="chat-message-input" class="form-control"
-                                                                                   placeholder="Your message...">
+                                           placeholder="Your message..." />
                                 </div>
 
                                 <div class="form-group">
-                                    <button class="btn btn-primary" id="chat-message-submit">Submit</button>
+                                    <input type="submit" class="btn btn-primary" value="Submit" />
                                 </div>
                             </form>
                         </div>
@@ -34,4 +36,63 @@
             </div>
         </div>
     </section>
+{% endblock %}
+
+{% block scripts %}
+    {{ room.slug|json_script:"json-roomname" }}
+    {{ request.user.username|json_script:"json-username" }}
+
+    <script>
+        const roomName = JSON.parse(document.getElementById('json-roomname').textContent);
+        const userName = JSON.parse(document.getElementById('json-username').textContent);
+
+        const chatSocket = new WebSocket(
+            'ws://'
+            + window.location.host
+            + '/ws/'
+            + roomName
+            + '/'
+        );
+
+        chatSocket.onclose = function () {
+            console.error('The socket closed unexpectedly');
+        };
+
+        chatSocket.onmessage = function (e) {
+            const data = JSON.parse(e.data);
+
+            if (data.message) {
+                document.querySelector('#chat-messages').innerHTML += ('<b>' + data.username + '</b>: ' + data.message + '<br>');
+            } else {
+                alert('The message was empty!')
+            }
+
+            scrollToBottom();
+        };
+
+        document.querySelector('#chat-message-input').focus();
+
+        document.querySelector('#chat-message-form').onsubmit = function (e) {
+            e.preventDefault();
+
+            const messageInputDom = document.querySelector('#chat-message-input');
+            const message = messageInputDom.value;
+
+            chatSocket.send(JSON.stringify({
+                'message': message,
+                'username': userName,
+                'room': roomName
+            }));
+
+            messageInputDom.value = '';
+
+            return false;
+        };
+
+        function scrollToBottom() {
+            let objDiv = document.getElementById("chat-messages");
+            objDiv.scrollTop = objDiv.scrollHeight;
+        }
+        scrollToBottom();
+    </script>
 {% endblock %}

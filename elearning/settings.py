@@ -37,8 +37,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     "rules.apps.RulesConfig",
     "uniworld.apps.WebConfig",
+    "chat.apps.ChatConfig",
     "users.apps.UsersConfig",
-    "chat.apps.ChatConfig"
 ]
 
 MIDDLEWARE = [
@@ -159,6 +159,10 @@ MEDIA_URL = '/media/'
 ASGI_APPLICATION = "elearning.asgi.application"
 CHANNEL_LAYERS = {
     'default': {
-        'BACKEND': 'channels.layers.InMemoryChannelLayer',
+        # 'BACKEND': 'channels.layers.InMemoryChannelLayer',
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            'hosts': [('localhost', 6379)],
+        },
     },
 }

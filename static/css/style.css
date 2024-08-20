@@ -145,7 +145,7 @@ a:hover {
   border: solid 1px var(--color-light);
   padding: 1rem;
   border-radius: var(--border-radius);
-  box-shadow: rgb(11 43 158 / 15%) 0px 6px 20px -6px;
+  box-shadow: rgb(11 43 158 / 15%) 0 6px 20px -6px;
   min-width: 400px;
 }
 
@@ -188,15 +188,13 @@ textarea {
   max-height: 7rem;
 }
 
-/* Task list */
-
-.tasks {
+.models {
   list-style: none;
   width: 100%;
   max-width: 450px;
 }
 
-.tasks li {
+.models li {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -204,23 +202,21 @@ textarea {
   border-bottom: solid 1px var(--color-dark);
   padding: 0.5rem 0;
 }
-.tasks li:last-of-type {
+.models li:last-of-type {
   border-bottom: none;
 }
 
-.task-controls {
+.model-controls {
   display: flex;
   justify-content: space-between;
   gap: 1rem;
 }
 
-.task-controls a {
+.model-controls a {
   color: var(--color-dark);
 }
 
-/* task detail */
-
-.task {
+.model {
   margin-bottom: auto;
 }
 
@@ -370,3 +366,7 @@ textarea {
   }
 }
 
+.messages {
+    height: 400px;
+    overflow-y: auto;
+}
