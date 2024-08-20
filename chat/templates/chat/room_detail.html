@@ -19,7 +19,7 @@
                 <div class="box">
                     <div class="media">
                         <div class="media-body">
-                            <form method="post" id="chat-message-form" action="#">
+                            <form id="chat-message-form">
                                 <div class="form-group">
                                     <label for="chat-message-input">Message</label>
                                     <input type="text" name="content" id="chat-message-input" class="form-control"
@@ -68,7 +68,7 @@
             scrollToBottom();
         };
 
-        window.addEventListener("DOMContentLoaded", function () {
+        document.addEventListener("DOMContentLoaded", function () {
             document.querySelector('#chat-message-input').focus();
 
             document.querySelector('#chat-message-form').addEventListener('submit', function (e) {
