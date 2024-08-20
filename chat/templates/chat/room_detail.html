@@ -79,9 +79,7 @@
 
             document.querySelector('#chat-message-input').focus();
 
-            const form = document.querySelector('#chat-message-form');
-            console.log(form);
-            form.addEventListener('submit', function (e) {
+            document.querySelector('#chat-message-form').addEventListener('submit', function (e) {
                 e.preventDefault();
 
                 const messageInputDom = document.querySelector('#chat-message-input');
