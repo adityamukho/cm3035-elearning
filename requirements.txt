@@ -11,3 +11,5 @@ asgiref~=3.8.1
 uvicorn~=0.30.6
 websockets~=12.0
 channels-redis~=4.2.0
+celery~=5.5.0b2
+redis~=5.0.8

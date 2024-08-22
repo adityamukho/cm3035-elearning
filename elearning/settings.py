@@ -133,8 +133,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 LOGIN_REDIRECT_URL = 'courses'
 LOGOUT_REDIRECT_URL = 'home'
 
-EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
-
 MEDIA_ROOT = BASE_DIR / 'media'
 MEDIA_URL = '/media/'
 
@@ -164,6 +162,9 @@ if DEBUG:
             'BACKEND': 'channels.layers.InMemoryChannelLayer',
         },
     }
+
+    CELERY_BROKER_URL = 'rediss://red-cr22mmo8fa8c739vnle0:QJwfSVRse04QpEu8ta4U35Nn2jKKkPiC@singapore-redis.render.com:6379'
+    EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 else:
     redis_backend_host = os.environ.get('REDIS_BACKEND_HOST', 'localhost')
     redis_backend_port = os.environ.get('REDIS_BACKEND_PORT', 6379)
@@ -176,3 +177,12 @@ else:
             },
         },
     }
+
+    CELERY_BROKER_URL = f'redis://{redis_backend_host}:{redis_backend_port}'
+
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    EMAIL_HOST = os.environ.get('EMAIL_HOST')
+    EMAIL_PORT = os.environ.get('EMAIL_PORT')
+    EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
+    EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
+    EMAIL_USE_TLS = True
