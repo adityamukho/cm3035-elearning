@@ -68,7 +68,11 @@
             const data = JSON.parse(e.data);
 
             if (data.message) {
-                document.querySelector('#chat-messages').innerHTML += ('<b>' + data.username + '</b>: ' + data.message + '<br>');
+                if (data.username === 'moderator') {
+                    document.querySelector('#chat-messages').innerHTML += ('<span class="alert-error"><b>' + data.username + '</b>: ' + data.message + '</span><br>');
+                } else {
+                    document.querySelector('#chat-messages').innerHTML += ('<span><b>' + data.username + '</b>: ' + data.message + '</span><br>');
+                }
             }
 
             scrollToBottom();

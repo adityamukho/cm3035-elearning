@@ -13,7 +13,7 @@ class RoomDetailView(DetailView):
 
     def get_context_data(self, **kwargs):
         room = self.get_object()
-        message_list = Message.objects.filter(room=room)[:25]
+        message_list = Message.objects.filter(room=room, flagged=False)[:25]
 
         context = super().get_context_data(**kwargs)
         context['message_list'] = message_list

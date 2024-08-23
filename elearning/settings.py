@@ -166,7 +166,7 @@ if DEBUG:
     CELERY_BROKER_URL = 'rediss://red-cr22mmo8fa8c739vnle0:QJwfSVRse04QpEu8ta4U35Nn2jKKkPiC@singapore-redis.render.com:6379'
     EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 else:
-    redis_backend_host = os.environ.get('REDIS_BACKEND_HOST', 'localhost')
+    redis_backend_host = os.environ.get('REDIS_BACKEND_HOST')
     redis_backend_port = os.environ.get('REDIS_BACKEND_PORT', 6379)
 
     CHANNEL_LAYERS = {
