@@ -16,3 +16,4 @@ redis~=5.0.8
 openai~=1.42.0
 pytest~=8.3.2
 pytest-django~=4.8.0
+django-bootstrap5~=24.2
