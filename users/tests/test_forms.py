@@ -10,8 +10,8 @@ def test_register_form_valid():
     form_data = {
         'username': 'newuser',
         'email': 'newuser@example.com',
-        'password1': 'password123',
-        'password2': 'password123',
+        'password1': '364TB011222',
+        'password2': '364TB011222',
     }
     form = RegisterForm(data=form_data)
     assert form.is_valid()
@@ -31,10 +31,10 @@ def test_user_update_form():
 @pytest.mark.django_db
 def test_profile_update_form():
     user = User.objects.create_user(username='testuser', password='12345')
-    profile = Profile.objects.create(user=user)
-    form_data = {'avatar': 'path/to/new/avatar.jpg'}  # Mock file upload if needed
+    profile = Profile.objects.get(user=user)
+    form_data = {'avatar': 'avatar.jpg'}  # Mock file upload if needed
     form = ProfileUpdateForm(data=form_data, instance=profile)
 
     assert form.is_valid()
     updated_profile = form.save()
-    assert updated_profile.avatar.name == 'path/to/new/avatar.jpg'  # Adjust based on actual file handling
+    assert updated_profile.avatar.name == 'avatar.jpg'

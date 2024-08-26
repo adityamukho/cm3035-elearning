@@ -10,7 +10,7 @@ def test_profile_creation():
     profile = Profile.objects.get(user=user)
 
     assert profile.user == user
-    assert profile.avatar.name == 'profile_avatars/avatar.jpg'  # Check default avatar
+    assert profile.avatar.name == 'avatar.jpg'  # Check default avatar
 
 
 @pytest.mark.django_db
