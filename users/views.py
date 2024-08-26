@@ -18,7 +18,7 @@ class RegisterView(FormView):
     def form_valid(self, form):
         user = form.save()
         if user:
-            login(self.request, user)
+            login(self.request, user, backend='django.contrib.auth.backends.ModelBackend')
 
         return super(RegisterView, self).form_valid(form)
 

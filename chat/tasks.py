@@ -1,9 +1,6 @@
+from celery import shared_task
 from django.contrib.auth.models import User
 from django.core.mail import send_mail
-from celery import shared_task
-from openai import APIError
-
-from chat.models import Message
 
 
 @shared_task
