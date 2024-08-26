@@ -1,4 +1,4 @@
-# Uniworld - An E-Learning Portal
+# UniWorld - An E-Learning Portal
 
 ## CM3035 Coursework 2
 

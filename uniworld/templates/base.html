@@ -13,6 +13,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{% static 'css/style.css' %}"/>
+    <link rel="icon" href="{% static 'images/favicon.webp' %}" type="image/x-icon"/>
     <title>E-Learning App</title>
 </head>
 
@@ -21,7 +22,11 @@
     <div class="container">
         <nav class="navbar navbar-expand-lg bg-body-tertiary">
             <div class="container-fluid">
-                <a class="navbar-brand" href="{% url 'home' %}">Uniworld</a>
+                <a class="navbar-brand" href="{% url 'home' %}">
+                    <img src="{% static 'images/logo_navbar.webp' %}" alt="Logo" width="30" height="24"
+                         class="d-inline-block align-text-top">
+                    UniWorld
+                </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
                         data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
                         aria-expanded="false" aria-label="Toggle navigation">
@@ -64,13 +69,14 @@
         {% bootstrap_messages %}
         {% block content %}
         {% endblock content %}
+
+        <footer class="py-5">
+            <div class="d-flex flex-column flex-sm-row justify-content-between py-4 my-4 border-top">
+                <p>© Copyright {% now "Y" %} by <a href="https://adityamukho.com">Aditya Mukhopadhyay</a></p>
+            </div>
+        </footer>
     </div>
 </main>
-<footer class="footer">
-    <div class="container">
-        <p>© Copyright {% now "Y" %} by <a href="https://adityamukho.com">Aditya Mukhopadhyay</a></p>
-    </div>
-</footer>
 {% block scripts %}{% endblock %}
 </body>
 </html>
