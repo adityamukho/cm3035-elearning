@@ -5,6 +5,7 @@ from django.views import View
 from django.views.generic.edit import FormView
 from django.shortcuts import render, redirect
 from django.contrib import messages
+from django.contrib.auth.models import Group
 
 from .forms import RegisterForm, UserUpdateForm, ProfileUpdateForm
 
@@ -17,6 +18,7 @@ class RegisterView(FormView):
 
     def form_valid(self, form):
         user = form.save()
+        user.groups.add(Group.objects.get(name='students'))
         if user:
             login(self.request, user, backend='django.contrib.auth.backends.ModelBackend')
 
