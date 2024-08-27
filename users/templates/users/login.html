@@ -10,11 +10,49 @@
             {% bootstrap_form form layout='floating' %}
 
             {% bootstrap_button button_type="submit" content="Login" button_class='btn btn-primary full-width' %}
-            <hr>
-            <p class="text-center">
-                Forgot your password? <a href="{% url 'password_reset' %}">Reset Password.</a>
-            </p>
-            <p class="text-center">Don't have a account? <a href="{% url 'register' %}">Join Now.</a></p>
         </form>
+        <hr>
+        <p class="text-center">
+            Forgot your password? <a href="{% url 'password_reset' %}">Reset Password.</a>
+        </p>
+        <p class="text-center">Don't have a account? <a href="{% url 'register' %}">Join Now.</a></p>
+        <hr/>
+        <h1 class="h3 mb-3 fw-normal">Available logins</h1>
+        <table class="table">
+            <thead>
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">Username</th>
+                <th scope="col">Password</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <th scope="row">1</th>
+                <td>student1</td>
+                <td>student1</td>
+            </tr>
+            <tr>
+                <th scope="row">2</th>
+                <td>student2</td>
+                <td>student2</td>
+            </tr>
+            <tr>
+                <th scope="row">3</th>
+                <td>teacher1</td>
+                <td>teacher1</td>
+            </tr>
+            <tr>
+                <th scope="row">4</th>
+                <td>teacher2</td>
+                <td>teacher2</td>
+            </tr>
+            <tr>
+                <th scope="row">5</th>
+                <td>admin</td>
+                <td>admin</td>
+            </tr>
+            </tbody>
+        </table>
     </div>
 {% endblock content %}
