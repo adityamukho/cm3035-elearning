@@ -20,7 +20,7 @@
 <body>
 <header class="header">
     <div class="container">
-        <nav class="navbar navbar-expand-lg bg-body-tertiary">
+        <nav class="navbar navbar-expand-lg bg-body-tertiary fixed-top">
             <div class="container-fluid">
                 <a class="navbar-brand" href="{% url 'home' %}">
                     <img src="{% static 'images/logo_navbar.webp' %}" alt="Logo" width="30" height="24"
@@ -64,19 +64,31 @@
         </nav>
     </div>
 </header>
-<main>
-    <div class="container">
-        {% bootstrap_messages %}
-        {% block content %}
-        {% endblock content %}
-
-        <footer class="py-5">
-            <div class="d-flex flex-column flex-sm-row justify-content-between py-4 my-4 border-top">
-                <p>© Copyright {% now "Y" %} by <a href="https://adityamukho.com">Aditya Mukhopadhyay</a></p>
+<main class="flex-shrink-0">
+    <div class="container col-xxl-8 px-4 py-5">
+        <div class="row flex-lg-row-reverse align-items-center g-5 py-5">
+            <div class="col-lg-12">
+                {% bootstrap_messages %}
+                {% block content %}
+                {% endblock content %}
             </div>
-        </footer>
+        </div>
     </div>
 </main>
+<footer class="footer mt-auto py-3 bg-body-tertiary">
+    <div class="container">
+        <span class="text-body-secondary">
+            <a href="{% url 'home' %}">
+                <img src="{% static 'images/logo_navbar.webp' %}" alt="Logo" width="30" height="24"
+                     class="d-inline-block align-text-top">
+            </a>
+            <span class="mb-3 mb-md-0 text-body-secondary">
+                &nbsp;© Copyright {% now "Y" %} by <a href="https://adityamukho.com"
+                                                      target="_blank">Aditya Mukhopadhyay</a>
+            </span>
+        </span>
+    </div>
+</footer>
 {% block scripts %}{% endblock %}
 </body>
 </html>
