@@ -20,7 +20,21 @@ def home(request):
 
 class CourseListView(ListView):
     model = Course
-    context_object_name = 'course_list'
+
+    def get_context_data(self, **kwargs):
+        course_list = Course.objects.all()
+        enrolled_students = {}
+
+        for course in course_list:
+            enrolled_students[course.id] = course.students.count()
+
+        context = super().get_context_data(**kwargs)
+        context['course_list'] = course_list
+        context['enrolled_students'] = enrolled_students
+
+        print(enrolled_students)
+
+        return context
 
 
 class CourseDetailView(DetailView):

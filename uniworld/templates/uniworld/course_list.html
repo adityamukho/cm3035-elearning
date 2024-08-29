@@ -2,7 +2,6 @@
 {% load rules %}
 
 {% block content %}
-
     <div class="center">
         <h2>Courses</h2>
         {% if course_list %}
@@ -12,18 +11,18 @@
                         <div class="card card-cover h-100 overflow-hidden text-bg-dark rounded-4 shadow-lg"
                              style="background-image: url('https://picsum.photos/seed/{{ course.id }}/400/200'); background-size: cover;">
                             <div class="d-flex flex-column h-100 p-5 pb-3 text-shadow-1 opacity-75">
-                                <h3 class="mt-5 mb-4 display-6 lh-1 fw-bold bg-light-subtle text-black-50">{{ course.name }}</h3>
+                                <h3 class="mt-5 mb-4 display-6 lh-1 fw-bold bg-light-subtle text-black-50">
+                                    <a href="{% url 'course' course.pk %}" class="text-decoration-none text-black-50">{{ course.name }}</a>
+                                </h3>
                                 <ul class="d-flex list-unstyled mt-auto bg-dark p-2 text-light">
                                     <li class="me-auto">
-                                        <img src="{{ course.teacher.profile.avatar.url }}" alt="Instructor" width="32"
-                                             height="32"
-                                             class="rounded-circle border border-white">
-                                    </li>
-                                    <li class="d-flex align-items-center me-3">
-                                        <small>Earth</small>
+                                        <a href="{% url 'profile' course.teacher.pk %}">
+                                            <img src="{{ course.teacher.profile.avatar.url }}" alt="Instructor" width="32"
+                                                 height="32" class="rounded-circle border border-white">
+                                        </a>
                                     </li>
                                     <li class="d-flex align-items-center">
-                                        <small>3d</small>
+                                        <small>{{ course.total_students }} students</small>
                                     </li>
                                 </ul>
                             </div>

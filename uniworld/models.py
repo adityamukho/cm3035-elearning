@@ -23,3 +23,9 @@ class Course(RulesModel):
 
     def __str__(self):
         return self.name
+
+    def student_count(self):
+        return self.students.count()
+
+    # noinspection PyTypeChecker
+    total_students = property(student_count)
