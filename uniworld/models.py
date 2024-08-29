@@ -3,7 +3,7 @@ from django.db import models
 from rules import Predicate, is_group_member
 from rules.contrib.models import RulesModel
 
-is_course_author = Predicate(lambda user, course: course.user == user)
+is_course_author = Predicate(lambda user, course: course.teacher == user)
 
 
 class Course(RulesModel):
@@ -16,7 +16,8 @@ class Course(RulesModel):
 
     name = models.CharField(max_length=200)
     description = models.TextField()
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    teacher = models.ForeignKey(User, on_delete=models.CASCADE)
+    students = models.ManyToManyField(User, related_name='enrolled_courses')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

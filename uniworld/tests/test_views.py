@@ -40,7 +40,7 @@ def student(group_students):
 
 @pytest.fixture
 def course(teacher):
-    return CourseFactory.create(user=teacher, name='Test Course')
+    return CourseFactory.create(teacher=teacher, name='Test Course')
 
 
 def test_heartbeat_view(client):

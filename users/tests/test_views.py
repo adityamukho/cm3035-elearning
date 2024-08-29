@@ -1,6 +1,11 @@
 import pytest
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.urls import reverse
+
+@pytest.fixture
+def students_group(db):
+    group, created = Group.objects.get_or_create(name='students')
+    return group
 
 @pytest.fixture
 def user():
@@ -8,7 +13,7 @@ def user():
 
 
 @pytest.mark.django_db
-def test_register_view(client):
+def test_register_view(client, students_group, user):
     url = reverse('register')
     response = client.post(url, {
         'username': 'newuser',

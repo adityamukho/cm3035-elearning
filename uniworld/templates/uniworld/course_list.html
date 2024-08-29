@@ -1,30 +1,38 @@
-{%extends 'base.html' %}
+{% extends 'base.html' %}
 {% load rules %}
 
-{%block content%}
+{% block content %}
 
-<div class="center">
-	<h2>Courses</h2>
-	{% if course_list %}
-	<ul class="courses">
-		{% for course in course_list %}
-            <li>
-                <a href="{% url 'course' course.id %}">{{ course.name }}</a>
-                <div  class="course-controls">
-                    {% has_perm 'uniworld.delete_course' request.user course as can_delete_course %}
-                    {% if can_delete_course %}
-                        <a href="{%url 'course-delete' course.id %}"><i class="bi bi-trash"></i> </a>
-                    {% endif %}
-                    {% has_perm 'uniworld.change_course' request.user course as can_change_course %}
-                    {% if can_change_course %}
-                        <a href="{%url 'course-update' course.id %}"><i class="bi bi-pencil-square"></i></a>
-                    {% endif %}
-                </div>
-            </li>
-		{% endfor %}
-	{% else %}
-		<p>No courses found.</p>
-	{% endif %}
-	</ul>
-</div>
-{%endblock content%}
+    <div class="center">
+        <h2>Courses</h2>
+        {% if course_list %}
+            <div class="row row-cols-1 row-cols-lg-3 align-items-stretch g-4 py-5">
+                {% for course in course_list %}
+                    <div class="col">
+                        <div class="card card-cover h-100 overflow-hidden text-bg-dark rounded-4 shadow-lg"
+                             style="background-image: url('https://picsum.photos/seed/{{ course.id }}/400/200'); background-size: cover;">
+                            <div class="d-flex flex-column h-100 p-5 pb-3 text-shadow-1 opacity-75">
+                                <h3 class="mt-5 mb-4 display-6 lh-1 fw-bold bg-light-subtle text-black-50">{{ course.name }}</h3>
+                                <ul class="d-flex list-unstyled mt-auto bg-dark p-2 text-light">
+                                    <li class="me-auto">
+                                        <img src="{{ course.teacher.profile.avatar.url }}" alt="Instructor" width="32"
+                                             height="32"
+                                             class="rounded-circle border border-white">
+                                    </li>
+                                    <li class="d-flex align-items-center me-3">
+                                        <small>Earth</small>
+                                    </li>
+                                    <li class="d-flex align-items-center">
+                                        <small>3d</small>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p>No courses found.</p>
+        {% endif %}
+    </div>
+{% endblock content %}

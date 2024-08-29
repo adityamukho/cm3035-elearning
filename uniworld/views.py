@@ -34,7 +34,7 @@ class CourseCreateView(AutoPermissionRequiredMixin, CreateView):
     success_url = reverse_lazy('courses')
 
     def form_valid(self, form):
-        form.instance.user = self.request.user
+        form.instance.teacher = self.request.user
         messages.success(self.request, "The course was created successfully.")
 
         return super(CourseCreateView, self).form_valid(form)
