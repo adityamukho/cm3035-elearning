@@ -1,11 +1,13 @@
 from django.contrib.auth import login
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.contrib.auth.views import LoginView
+from django.db.models import Q
 from django.urls import reverse_lazy
 from django.views import View
 from django.views.generic.edit import FormView
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
-from django.contrib.auth.models import Group
+from django.contrib.auth.models import Group, User
 
 from .forms import RegisterForm, UserUpdateForm, ProfileUpdateForm
 
@@ -26,27 +28,36 @@ class RegisterView(FormView):
 
 
 # noinspection PyMethodMayBeStatic
-class ProfileView(LoginRequiredMixin, View):
-    def get(self, request):
-        user_form = UserUpdateForm(instance=request.user)
-        profile_form = ProfileUpdateForm(instance=request.user.profile)
+class ProfileView(LoginRequiredMixin, UserPassesTestMixin, View):
+    def get(self, request, pk):
+        user = get_object_or_404(User, pk=pk)
+        user_form = UserUpdateForm(instance=user)
+        profile_form = ProfileUpdateForm(instance=user.profile)
 
         context = {
             'user_form': user_form,
-            'profile_form': profile_form
+            'profile_form': profile_form,
+            'is_own_profile': user == request.user
         }
+        print(user_form)
 
         return render(request, 'users/profile.html', context)
 
-    def post(self, request):
+    def post(self, request, pk):
+        user = get_object_or_404(User, pk=pk)
+        if user != request.user:
+            messages.error(request, 'You are not authorized to edit this profile.')
+
+            return redirect('profile', pk=user.pk)
+
         user_form = UserUpdateForm(
             request.POST,
-            instance=request.user
+            instance=user
         )
         profile_form = ProfileUpdateForm(
             request.POST,
             request.FILES,
-            instance=request.user.profile
+            instance=user.profile
         )
 
         if user_form.is_valid() and profile_form.is_valid():
@@ -55,11 +66,12 @@ class ProfileView(LoginRequiredMixin, View):
 
             messages.success(request, 'Your profile has been updated successfully')
 
-            return redirect('profile')
+            return redirect('profile', pk=user.pk)
         else:
             context = {
                 'user_form': user_form,
-                'profile_form': profile_form
+                'profile_form': profile_form,
+                'is_own_profile': user == request.user
             }
             messages.error(request, 'Error updating you profile')
 

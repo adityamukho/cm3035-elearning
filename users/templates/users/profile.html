@@ -2,19 +2,28 @@
 
 {% block content %}
     <div class="card w-50 m-auto">
-        {% if user.profile %}
-            <img src="{{ user.profile.avatar.url }}" alt="{{ user.username }}" class="card-img-top img-thumbnail"/>
+        {% if profile_form.instance.avatar %}
+            <img src="{{ profile_form.instance.avatar.url }}" alt="{{ user_form.instance.username }}"
+                 class="card-img-top img-thumbnail"/>
         {% endif %}
         <div class="card-body">
-            <h5 class="card-title">{{ user.username | title }}</h5>
-            <p class="card-text"><a href="mailto:{{ user.email }}">{{ user.email }}</a></p>
+            <h5 class="card-title">{{ user_form.instance.first_name }} {{ user_form.instance.last_name }}</h5>
+            <p class="card-text"><a href="mailto:{{ user_form.instance.email }}">{{ user_form.instance.email }}</a></p>
             <hr>
 
             <form method="POST" enctype="multipart/form-data">
                 {% csrf_token %}
                 <div class="mb-3">
+                    <label for="first-name" class="form-label">First Name:</label>
+                    <input type="text" id="first-name" class="form-control" value="{{ user_form.instance.first_name }}"/>
+                </div>
+                <div class="mb-3">
+                    <label for="last-name" class="form-label">Last Name:</label>
+                    <input type="text" id="last-name" class="form-control" value="{{ user_form.instance.last_name }}"/>
+                </div>
+                <div class="mb-3">
                     <label for="email" class="form-label">Email Address:</label>
-                    <input type="email" id="email" class="form-control" value="{{ user.email }}"/>
+                    <input type="email" id="email" class="form-control" value="{{ user_form.instance.email }}"/>
                 </div>
                 <div class="mb-3">
                     <label for="avatar" class="form-label">Avatar:</label>
