@@ -64,3 +64,18 @@ class ProfileView(LoginRequiredMixin, View):
             messages.error(request, 'Error updating you profile')
 
             return render(request, 'users/profile.html', context)
+
+    def test_func(self):
+        user = get_object_or_404(User, pk=self.kwargs['pk'])
+
+        return self.request.user == user
+
+
+class UserLoginView(LoginView):
+    def get_context_data(self, **kwargs):
+        users = User.objects.filter(Q(groups__name='students') | Q(groups__name='teachers')).order_by('id')
+
+        context = super().get_context_data(**kwargs)
+        context['users'] = users
+
+        return context
