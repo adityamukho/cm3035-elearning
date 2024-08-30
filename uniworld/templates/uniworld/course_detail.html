@@ -1,22 +1,55 @@
 {% extends 'base.html' %}
 
 {% block content %}
-    <article class="bg-white shadow-md rounded-lg p-6">
-        <header class="mb-4">
-            <h2 class="text-2xl font-bold text-gray-800">{{ course.name }}</h2>
-        </header>
-        <p class="text-gray-600 mb-6">{{ course.description }}</p>
-        <div class="mt-6">
-            <h3 class="text-xl font-semibold text-gray-800 mb-3">Enrolled Students</h3>
-            {% if enrolled_students %}
-                <ul class="list-disc list-inside">
-                    {% for student in enrolled_students %}
-                        <li class="text-gray-600">{{ student.username }}</li>
-                    {% endfor %}
-                </ul>
-            {% else %}
-                <p class="text-gray-600">No students enrolled yet.</p>
+    <article class="card shadow mb-4">
+        <div class="card-img-top overflow-hidden" style="height: 200px; background-image: url('https://picsum.photos/seed/{{ course.id }}/400/200'); background-size: cover;"></div>
+        <div class="card-body">
+            <header class="mb-4">
+                <h2 class="card-title h4">{{ course.name }}</h2>
+                <div class="d-flex align-items-center mt-2">
+                    <a href="{% url 'profile' course.teacher.pk %}" class="text-decoration-none">
+                        <img src="{{ course.teacher.profile.avatar.url }}" alt="Instructor" width="32" height="32" class="rounded-circle border border-secondary me-2">
+                        <span class="text-muted">{{ course.teacher.username }}</span>
+                    </a>
+                </div>
+            </header>
+            <p class="card-text text-muted mb-4">{{ course.description }}</p>
+            {% if user.is_authenticated and user != course.teacher %}
+                {% if is_enrolled %}
+                    <form method="post" action="{% url 'course-leave' course.pk %}" id="leaveCourseForm">
+                        {% csrf_token %}
+                        <button type="button" class="btn btn-danger mb-4" onclick="confirmLeave()">
+                            Leave this course
+                        </button>
+                    </form>
+                {% else %}
+                    <form method="post">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-primary mb-4">
+                            Enroll in this course
+                        </button>
+                    </form>
+                {% endif %}
             {% endif %}
+            <div class="mt-4">
+                <h3 class="h5 mb-3">Enrolled Students</h3>
+                {% if enrolled_students %}
+                    <ul class="list-group">
+                        {% for student in enrolled_students %}
+                            <li class="list-group-item">{{ student.username }}</li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="text-muted">No students enrolled yet.</p>
+                {% endif %}
+            </div>
         </div>
     </article>
+    <script>
+    function confirmLeave() {
+        if (confirm("Are you sure you want to leave this course?")) {
+            document.getElementById("leaveCourseForm").submit();
+        }
+    }
+    </script>
 {% endblock content %}

@@ -29,3 +29,9 @@ class Course(RulesModel):
 
     # noinspection PyTypeChecker
     total_students = property(student_count)
+
+    def enroll_student(self, user):
+        if user not in self.students.all():
+            self.students.add(user)
+            return True
+        return False
