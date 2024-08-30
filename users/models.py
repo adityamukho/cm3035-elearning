@@ -1,9 +1,19 @@
 from django.db import models
 from django.contrib.auth.models import User
 from PIL import Image
+from rules.contrib.models import RulesModel
+from rules import Predicate, always_deny
 
+is_profile_user = Predicate(lambda user, profile: profile.user == user)
 
-class Profile(models.Model):
+class Profile(RulesModel):
+    class Meta:
+        rules_permissions = {
+            'add': always_deny,
+            'change': is_profile_user,
+            'delete': always_deny,
+        }
+
     user = models.OneToOneField(User, on_delete=models.CASCADE)
 
     avatar = models.ImageField(

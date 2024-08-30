@@ -32,8 +32,6 @@ class CourseListView(ListView):
         context['course_list'] = course_list
         context['enrolled_students'] = enrolled_students
 
-        print(enrolled_students)
-
         return context
 
 

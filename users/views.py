@@ -1,13 +1,13 @@
+from django.contrib import messages
 from django.contrib.auth import login
-from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.models import Group, User
 from django.contrib.auth.views import LoginView
 from django.db.models import Q
+from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse_lazy
 from django.views import View
 from django.views.generic.edit import FormView
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib import messages
-from django.contrib.auth.models import Group, User
 
 from .forms import RegisterForm, UserUpdateForm, ProfileUpdateForm
 
@@ -28,7 +28,7 @@ class RegisterView(FormView):
 
 
 # noinspection PyMethodMayBeStatic
-class ProfileView(LoginRequiredMixin, UserPassesTestMixin, View):
+class ProfileView(LoginRequiredMixin, View):
     def get(self, request, pk):
         user = get_object_or_404(User, pk=pk)
         user_form = UserUpdateForm(instance=user)
@@ -39,7 +39,6 @@ class ProfileView(LoginRequiredMixin, UserPassesTestMixin, View):
             'profile_form': profile_form,
             'is_own_profile': user == request.user
         }
-        print(user_form)
 
         return render(request, 'users/profile.html', context)
 
@@ -76,12 +75,6 @@ class ProfileView(LoginRequiredMixin, UserPassesTestMixin, View):
             messages.error(request, 'Error updating you profile')
 
             return render(request, 'users/profile.html', context)
-
-    def test_func(self):
-        user = get_object_or_404(User, pk=self.kwargs['pk'])
-
-        return self.request.user == user
-
 
 class UserLoginView(LoginView):
     def get_context_data(self, **kwargs):

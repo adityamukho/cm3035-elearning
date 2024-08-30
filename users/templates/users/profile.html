@@ -11,8 +11,9 @@
             <p class="card-text"><a href="mailto:{{ user_form.instance.email }}">{{ user_form.instance.email }}</a></p>
             <hr>
 
-            <form method="POST" enctype="multipart/form-data">
-                {% csrf_token %}
+            {% if is_own_profile %}
+                <form method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
                 <div class="mb-3">
                     <label for="first-name" class="form-label">First Name:</label>
                     <input type="text" id="first-name" class="form-control" value="{{ user_form.instance.first_name }}"/>
@@ -30,8 +31,20 @@
                     <input type="file" name="avatar" id="avatar" class="form-control">
                 </div>
 
-                <button type="submit" class="btn btn-primary full-width">Update Profile</button>
-            </form>
+                    <button type="submit" class="btn btn-primary full-width">Update Profile</button>
+                </form>
+            {% else %}
+                <dl class="row">
+                    <dt class="col-sm-3">First Name:</dt>
+                    <dd class="col-sm-9">{{ user_form.instance.first_name }}</dd>
+
+                    <dt class="col-sm-3">Last Name:</dt>
+                    <dd class="col-sm-9">{{ user_form.instance.last_name }}</dd>
+
+                    <dt class="col-sm-3">Email Address:</dt>
+                    <dd class="col-sm-9">{{ user_form.instance.email }}</dd>
+                </dl>
+            {% endif %}
         </div>
     </div>
 {% endblock content %}
