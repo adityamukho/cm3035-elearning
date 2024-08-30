@@ -39,6 +39,11 @@ class CourseDetailView(DetailView):
     model = Course
     context_object_name = 'course'
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['enrolled_students'] = self.object.students.all()
+        return context
+
 
 class CourseCreateView(AutoPermissionRequiredMixin, CreateView):
     model = Course
