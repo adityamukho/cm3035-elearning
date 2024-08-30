@@ -1,36 +1,42 @@
 {% extends 'base.html' %}
 
 {% block content %}
-    <header>
-        <h2>{{ room.name }}</h2>
+    <header class="mb-4">
+        <h2 class="text-center">{{ room.name }}</h2>
     </header>
 
-    <section class="section text-white">
-        <div class="row">
-            <div class="col-8 offset-2">
-                <div class="box messages" id="chat-messages">
-                    {% for m in message_list %}
-                        <b>{{ m.user.username }}</b>: {{ m.content }}<br>
-                    {% endfor %}
-                </div>
-            </div>
-
-            <div class="col-8 offset-2">
-                <div class="box">
-                    <div class="media">
-                        <div class="media-body">
-                            <form id="chat-message-form">
-                                <div class="form-group">
-                                    <label for="chat-message-input">Message</label>
-                                    <input type="text" name="content" id="chat-message-input" class="form-control"
-                                           placeholder="Your message..."/>
+    <section class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="messages-container" id="chat-messages" style="height: 400px; overflow-y: auto;">
+                            {% for m in message_list %}
+                                <div class="message mb-2">
+                                    <strong><a href="{% url 'profile' m.user.id %}">{{ m.user.username }}</a>:</strong>
+                                    <span class="message-content">{{ m.content|safe }}</span>
                                 </div>
-
-                                <div class="form-group">
-                                    <input type="submit" class="btn btn-primary" value="Submit"/>
-                                </div>
-                            </form>
+                            {% endfor %}
                         </div>
+                    </div>
+                    <div class="card-footer">
+                        <form id="chat-message-form">
+                            <div class="input-group">
+                                <input type="text" name="content" id="chat-message-input" class="form-control" placeholder="Your message..." disabled list="user-list"/>
+                                <datalist id="user-list">
+                                    {% for user in users %}
+                                        <option value="@{{ user.username }}" data-user-id="{{ user.id }}">
+                                    {% endfor %}
+                                </datalist>
+                                <button type="submit" class="btn btn-primary" disabled>Send</button>
+                            </div>
+                            <div id="moderation-spinner" class="d-none position-absolute top-50 start-50 translate-middle">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Moderating...</span>
+                                </div>
+                                <span class="ms-2">Moderating...</span>
+                            </div>
+                        </form>
                     </div>
                 </div>
             </div>
@@ -41,73 +47,111 @@
 {% block scripts %}
     {{ room.slug|json_script:"json-roomname" }}
     {{ request.user.username|json_script:"json-username" }}
+    {% url 'profile' 0 as profile_url %}
+    {{ profile_url|json_script:"json-profile-url" }}
 
     <script>
         const roomName = JSON.parse(document.getElementById('json-roomname').textContent);
         const userName = JSON.parse(document.getElementById('json-username').textContent);
 
-        const loc = window.location;
-        let wsStart = 'ws://';
-        if (loc.protocol === 'https:') {
-             wsStart = 'wss://'
-        }
-
         const chatSocket = new WebSocket(
-            wsStart
+            'ws://'
             + window.location.host
             + '/ws/'
             + roomName
             + '/'
         );
 
-        chatSocket.onclose = function () {
-            console.error('The socket closed unexpectedly');
+        const chatMessages = document.querySelector('#chat-messages');
+        const chatMessageForm = document.querySelector('#chat-message-form');
+        const chatMessageInput = document.querySelector('#chat-message-input');
+        const sendButton = chatMessageForm.querySelector('button[type="submit"]');
+        const moderationSpinner = document.querySelector('#moderation-spinner');
+
+        chatSocket.onopen = function(e) {
+            console.log('WebSocket connection established');
+            enableChatInput();
         };
 
-        chatSocket.onmessage = function (e) {
-            const data = JSON.parse(e.data);
+        chatSocket.onclose = function(e) {
+            console.error('WebSocket connection closed unexpectedly');
+            disableChatInput();
+        };
 
+        chatSocket.onerror = function(e) {
+            console.error('WebSocket error occurred:', e);
+        };
+
+        chatSocket.onmessage = function(e) {
+            const data = JSON.parse(e.data);
             if (data.message) {
+                let userLink;
                 if (data.username === 'moderator') {
-                    document.querySelector('#chat-messages').innerHTML += ('<span class="alert-error"><b>' + data.username + '</b>: ' + data.message + '</span><br>');
+                    userLink = '<strong>moderator:</strong>';
                 } else {
-                    document.querySelector('#chat-messages').innerHTML += ('<span><b>' + data.username + '</b>: ' + data.message + '</span><br>');
+                    userLink = `<strong><a href="/profile/${data.user_id}/">${data.username}</a>:</strong>`;
+                }
+                const messageHTML = `
+                    <div class="message mb-2">
+                        ${userLink}
+                        <span class="message-content ${data.username === 'moderator' ? 'text-danger' : ''}">${formatMessage(data.message)}</span>
+                    </div>
+                `;
+                chatMessages.insertAdjacentHTML('beforeend', messageHTML);
+                scrollToBottom();
+
+                if (data.username === userName || (data.username === 'moderator' && data.message.includes(userName))) {
+                    enableChatInput();
                 }
             }
-
-            scrollToBottom();
         };
 
-        document.addEventListener("DOMContentLoaded", function () {
-            console.log("DOM content loaded.");
-
-            document.querySelector('#chat-message-input').focus();
-
-            document.querySelector('#chat-message-form').addEventListener('submit', function (e) {
-                e.preventDefault();
-
-                const messageInputDom = document.querySelector('#chat-message-input');
-                const message = messageInputDom.value;
-
-                if (message !== '') {
-                    chatSocket.send(JSON.stringify({
-                        'message': message,
-                        'username': userName,
-                        'room': roomName
-                    }));
-
-                    messageInputDom.value = '';
-                }
-
-                return false;
-            });
+        chatMessageForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const message = chatMessageInput.value.trim();
+            if (message) {
+                disableChatInput();
+                chatSocket.send(JSON.stringify({
+                    'message': message,
+                    'username': userName,
+                    'room': roomName
+                }));
+                chatMessageInput.value = '';
+            }
         });
 
         function scrollToBottom() {
-            let objDiv = document.getElementById("chat-messages");
-            objDiv.scrollTop = objDiv.scrollHeight;
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function disableChatInput() {
+            chatMessageInput.disabled = true;
+            sendButton.disabled = true;
+            moderationSpinner.classList.remove('d-none');
+            chatMessageInput.style.opacity = '0.5';
+        }
+
+        function enableChatInput() {
+            chatMessageInput.disabled = false;
+            sendButton.disabled = false;
+            moderationSpinner.classList.add('d-none');
+            chatMessageInput.style.opacity = '1';
+            chatMessageInput.focus();
+        }
+
+        function formatMessage(message) {
+            const userList = document.getElementById('user-list');
+            return message.replace(/@(\w+)/g, (match, username) => {
+                const option = userList.querySelector(`option[value="@${username}"]`);
+                if (option) {
+                    const userId = option.getAttribute('data-user-id');
+                    return `<a href="/profile/${userId}/" class="mention">@${username}</a>`;
+                }
+                return match;
+            });
         }
 
         scrollToBottom();
+        enableChatInput();
     </script>
 {% endblock %}

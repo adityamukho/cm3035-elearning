@@ -15,21 +15,32 @@
             </header>
             <p class="card-text text-muted mb-4">{{ course.description }}</p>
             {% if user.is_authenticated and user != course.teacher %}
-                {% if is_enrolled %}
-                    <form method="post" action="{% url 'course-leave' course.pk %}" id="leaveCourseForm">
-                        {% csrf_token %}
-                        <button type="button" class="btn btn-danger mb-4" onclick="confirmLeave()">
-                            Leave this course
-                        </button>
-                    </form>
-                {% else %}
-                    <form method="post">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-primary mb-4">
-                            Enroll in this course
-                        </button>
-                    </form>
-                {% endif %}
+                <div class="row">
+                    <div class="col">
+                        {% if is_enrolled %}
+                            <form method="post" action="{% url 'course-leave' course.pk %}" id="leaveCourseForm">
+                                {% csrf_token %}
+                                <button type="button" class="btn btn-danger mb-4 w-100" onclick="confirmLeave()">
+                                    Leave this course
+                                </button>
+                            </form>
+                        {% else %}
+                            <form method="post">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-primary mb-4 w-100">
+                                    Enroll in this course
+                                </button>
+                            </form>
+                        {% endif %}
+                    </div>
+                    {% if is_enrolled and course.chat_room %}
+                        <div class="col">
+                            <a href="{% url 'room' course.chat_room.id %}" class="btn btn-secondary mb-4 w-100">
+                                Go to Course Chat Room
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
             {% endif %}
             <div class="mt-4">
                 <h3 class="h5 mb-3">Enrolled Students</h3>

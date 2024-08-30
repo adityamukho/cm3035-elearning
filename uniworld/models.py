@@ -2,6 +2,7 @@ from django.contrib.auth.models import User
 from django.db import models
 from rules import Predicate, is_group_member
 from rules.contrib.models import RulesModel
+from chat.models import Room
 
 is_course_author = Predicate(lambda user, course: course.teacher == user)
 
@@ -20,6 +21,7 @@ class Course(RulesModel):
     students = models.ManyToManyField(User, related_name='enrolled_courses')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    chat_room = models.OneToOneField(Room, on_delete=models.CASCADE, null=True, related_name='course')
 
     def __str__(self):
         return self.name

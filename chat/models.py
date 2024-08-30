@@ -4,6 +4,7 @@ from django.contrib.auth.models import User
 class Room(models.Model):
     name = models.CharField(max_length=255)
     slug = models.SlugField()
+    creator = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_rooms')
 
 class Message(models.Model):
     class Meta:

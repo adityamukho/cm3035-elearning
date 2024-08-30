@@ -9,6 +9,7 @@ from rules.contrib.views import AutoPermissionRequiredMixin
 from django.views import View
 
 from uniworld.models import Course
+from chat.models import Room
 
 
 def heartbeat(request):
@@ -64,9 +65,15 @@ class CourseCreateView(AutoPermissionRequiredMixin, CreateView):
 
     def form_valid(self, form):
         form.instance.teacher = self.request.user
+        response = super(CourseCreateView, self).form_valid(form)
+        
+        # Create associated chat room
+        room = Room.objects.create(name=f"Chat for {form.instance.name}")
+        form.instance.chat_room = room
+        form.instance.save()
+        
         messages.success(self.request, "The course was created successfully.")
-
-        return super(CourseCreateView, self).form_valid(form)
+        return response
 
 
 class CourseUpdateView(AutoPermissionRequiredMixin, UpdateView):

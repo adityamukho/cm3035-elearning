@@ -1,1 +1,25 @@
 @import url('https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.2/font/bootstrap-icons.css');
+
+.mention {
+    background-color: #e8f5e9;
+    padding: 2px 4px;
+    border-radius: 3px;
+    font-weight: bold;
+    color: #2e7d32;
+    text-decoration: none;
+}
+
+.mention:hover {
+    text-decoration: underline;
+}
+
+#chat-message-form {
+    position: relative;
+}
+
+#moderation-spinner {
+    background-color: rgba(255, 255, 255, 0.8);
+    padding: 10px;
+    border-radius: 5px;
+    z-index: 1000;
+}
