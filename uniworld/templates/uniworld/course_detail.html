@@ -1,5 +1,7 @@
 {% extends 'base.html' %}
 
+{% load django_bootstrap5 %}
+
 {% block content %}
     <article class="card shadow mb-4">
         <div class="card-img-top overflow-hidden" style="height: 200px; background-image: url('https://picsum.photos/seed/{{ course.id }}/400/200'); background-size: cover;"></div>
@@ -9,7 +11,7 @@
                 <div class="d-flex align-items-center mt-2">
                     <a href="{% url 'profile' course.teacher.pk %}" class="text-decoration-none">
                         <img src="{{ course.teacher.profile.avatar.url }}" alt="Instructor" width="32" height="32" class="rounded-circle border border-secondary me-2">
-                        <span class="text-muted">{{ course.teacher.username }}</span>
+                        <span class="text-muted">{{ course.teacher.first_name }} {{ course.teacher.last_name }}</span>
                     </a>
                 </div>
             </header>
@@ -21,14 +23,14 @@
                             <form method="post" action="{% url 'course-leave' course.pk %}" id="leaveCourseForm">
                                 {% csrf_token %}
                                 <button type="button" class="btn btn-danger mb-4 w-100" onclick="confirmLeave()">
-                                    Leave this course
+                                    <i class="bi bi-box-arrow-left me-2"></i>Leave this course
                                 </button>
                             </form>
                         {% else %}
                             <form method="post">
                                 {% csrf_token %}
                                 <button type="submit" class="btn btn-primary mb-4 w-100">
-                                    Enroll in this course
+                                    <i class="bi bi-person-plus-fill me-2"></i>Enroll in this course
                                 </button>
                             </form>
                         {% endif %}
@@ -36,7 +38,7 @@
                     {% if is_enrolled and course.chat_room %}
                         <div class="col">
                             <a href="{% url 'room' course.chat_room.id %}" class="btn btn-secondary mb-4 w-100">
-                                Go to Course Chat Room
+                                <i class="bi bi-chat-dots-fill me-2"></i>Go to Course Chat Room
                             </a>
                         </div>
                     {% endif %}
@@ -47,9 +49,45 @@
                 {% if enrolled_students %}
                     <ul class="list-group">
                         {% for student in enrolled_students %}
-                            <li class="list-group-item">{{ student.username }}</li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <a href="{% url 'profile' student.pk %}" class="text-decoration-none">
+                                    {{ student.first_name }} {{ student.last_name }}
+                                </a>
+                                {% if user == course.teacher %}
+                                    <form method="post" action="{% url 'remove-student' course.id student.id %}" class="d-inline">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to remove this student?');">
+                                            <i class="bi bi-person-x-fill me-1"></i>Remove
+                                        </button>
+                                    </form>
+                                {% endif %}
+                            </li>
                         {% endfor %}
                     </ul>
+                    
+                    <nav aria-label="Page navigation" class="mt-4">
+                        <ul class="pagination">
+                            {% if enrolled_students.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ enrolled_students.previous_page_number }}">&laquo; Previous</a>
+                                </li>
+                            {% endif %}
+
+                            {% for num in enrolled_students.paginator.page_range %}
+                                {% if enrolled_students.number == num %}
+                                    <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                                {% else %}
+                                    <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+                                {% endif %}
+                            {% endfor %}
+
+                            {% if enrolled_students.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ enrolled_students.next_page_number }}">Next &raquo;</a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
                 {% else %}
                     <p class="text-muted">No students enrolled yet.</p>
                 {% endif %}

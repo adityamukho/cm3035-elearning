@@ -1,5 +1,5 @@
 from django.contrib import messages
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseForbidden
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse_lazy, reverse
 from django.views.generic.detail import DetailView
@@ -7,6 +7,10 @@ from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.views.generic.list import ListView
 from rules.contrib.views import AutoPermissionRequiredMixin
 from django.views import View
+from django.core.paginator import Paginator
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
+from .models import Course
 
 from uniworld.models import Course
 from chat.models import Room
@@ -20,20 +24,14 @@ def home(request):
     return render(request, 'home.html')
 
 
-class CourseListView(ListView):
+class CourseListView(LoginRequiredMixin, ListView):
     model = Course
+    template_name = 'uniworld/course_list.html'
+    context_object_name = 'course_list'
 
     def get_context_data(self, **kwargs):
-        course_list = Course.objects.all()
-        enrolled_students = {}
-
-        for course in course_list:
-            enrolled_students[course.id] = course.students.count()
-
         context = super().get_context_data(**kwargs)
-        context['course_list'] = course_list
-        context['enrolled_students'] = enrolled_students
-
+        context['can_add_course'] = self.request.user.has_perm('uniworld.add_course')
         return context
 
 
@@ -105,3 +103,33 @@ class CourseLeaveView(View):
             course.students.remove(request.user)
             messages.success(request, f"You have successfully left the course '{course.name}'.")
         return redirect('course', pk=pk)
+
+
+def course_detail(request, course_id):
+    course = get_object_or_404(Course, pk=course_id)
+    enrolled_students_list = course.students.all().order_by('last_name', 'first_name')
+    
+    paginator = Paginator(enrolled_students_list, 10)  # Show 10 students per page
+    page_number = request.GET.get('page')
+    enrolled_students = paginator.get_page(page_number)
+
+    context = {
+        'course': course,
+        'enrolled_students': enrolled_students,
+        'is_enrolled': request.user in course.students.all(),
+    }
+    return render(request, 'uniworld/course_detail.html', context)
+
+
+@login_required
+def remove_student(request, course_id, student_id):
+    course = get_object_or_404(Course, pk=course_id)
+    if request.user != course.teacher:
+        return HttpResponseForbidden("You don't have permission to remove students from this course.")
+    
+    if request.method == 'POST':
+        student = get_object_or_404(course.students, pk=student_id)
+        course.students.remove(student)
+        messages.success(request, f"{student.first_name} {student.last_name} has been removed from the course.")
+    
+    return redirect('course_detail', course_id=course_id)
