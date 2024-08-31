@@ -34,20 +34,13 @@
                 </button>
                 <div class="collapse navbar-collapse" id="navbarSupportedContent">
                     <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'courses' %}">Courses</a>
+                        </li>
                         {% if request.user.is_authenticated %}
-                            <li class="nav-item mt-2">
-                                <a class="nav-link" href="{% url 'courses' %}"><i class="bi bi-book"></i> Courses</a>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'rooms' %}">Chat Rooms</a>
                             </li>
-                            <li class="nav-item mt-2">
-                                <a class="nav-link" href="{% url 'rooms' %}"><i class="bi bi-chat"></i> Chat</a>
-                            </li>
-                            {% if can_add_course %}
-                                <li class="nav-item mt-2">
-                                    <a class="nav-link" href="{% url 'course-create' %}">
-                                        <i class="bi bi-plus-circle"></i> Create Course
-                                    </a>
-                                </li>
-                            {% endif %}
                         {% endif %}
                     </ul>
                     <ul class="d-flex navbar-nav mb-2 mb-lg-0">

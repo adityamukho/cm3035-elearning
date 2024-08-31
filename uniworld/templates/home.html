@@ -12,7 +12,7 @@
             <p class="lead">E-Learning Platform for Online Courses.</p>
 
             {% if not request.user.is_authenticated %}
-                <a class="btn btn-primary cta" href="{% url 'register' %}">Get Started</a>
+                <a class="btn btn-primary cta" href="{% url 'register' %}"><i class="bi bi-person-plus-fill me-2"></i>Get Started</a>
                 <p class="mt-5">
                     Click <a href="{% url 'login' %}">here</a> to see a list of available logins.
                 </p>
