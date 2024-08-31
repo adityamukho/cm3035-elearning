@@ -35,11 +35,12 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'channels',
     'django_bootstrap5',
     'rules',
-    'uniworld.apps.WebConfig',
-    'chat.apps.ChatConfig',
+    'chat',
     'users.apps.UsersConfig',
+    'uniworld.apps.WebConfig',
 ]
 
 MIDDLEWARE = [

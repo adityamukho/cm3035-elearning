@@ -45,21 +45,17 @@
 {% endblock %}
 
 {% block scripts %}
-    {{ room.slug|json_script:"json-roomname" }}
+    {{ room.slug|default:room.name|json_script:"room-name" }}
     {{ request.user.username|json_script:"json-username" }}
     {% url 'profile' 0 as profile_url %}
     {{ profile_url|json_script:"json-profile-url" }}
 
     <script>
-        const roomName = JSON.parse(document.getElementById('json-roomname').textContent);
-        const userName = JSON.parse(document.getElementById('json-username').textContent);
+        const roomName = JSON.parse(document.getElementById('room-name').textContent);
+        const userName = '{{ request.user.username|escapejs }}'; // Add this line
 
         const chatSocket = new WebSocket(
-            'ws://'
-            + window.location.host
-            + '/ws/'
-            + roomName
-            + '/'
+            'ws://' + window.location.host + '/ws/' + roomName + '/'
         );
 
         const chatMessages = document.querySelector('#chat-messages');

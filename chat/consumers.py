@@ -1,8 +1,7 @@
 import json
-
-from asgiref.sync import sync_to_async
 from channels.generic.websocket import AsyncWebsocketConsumer
-
+from channels.db import database_sync_to_async
+from .models import Room
 
 # Create a consumer class
 class ChatConsumer(AsyncWebsocketConsumer):
@@ -14,6 +13,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         self.moderator = None
 
     async def connect(self):
+        from .models import Room  # Move import here
         self.room_name = self.scope['url_route']['kwargs']['room_name']
         self.room_group_name = f'chat_{self.room_name}'
 
@@ -76,7 +76,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             'username': username
         }))
 
-    @sync_to_async
+    @database_sync_to_async
     def save_message(self, username, room, message):
         from .models import Room, Message
         from django.contrib.auth.models import User
@@ -86,7 +86,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
         return Message.objects.create(user=user, room=room, content=message)
 
-    @sync_to_async
+    @database_sync_to_async
     def get_moderator(self):
         if self.moderator is None:
             from django.contrib.auth.models import User
@@ -94,3 +94,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
             self.moderator = User.objects.get(username="moderator")
 
         return self.moderator
+
+    @database_sync_to_async
+    def get_room(self, room_name):
+        try:
+            return Room.objects.get(slug=room_name)
+        except Room.DoesNotExist:
+            return Room.objects.get(name=room_name)
