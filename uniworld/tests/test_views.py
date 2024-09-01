@@ -64,7 +64,7 @@ def test_course_list_view(client, course):
 
 @pytest.mark.django_db
 def test_course_detail_view(client, course):
-    response = client.get(reverse('course', args=[course.pk]))
+    response = client.get(reverse('course-detail', args=[course.pk]))
     assert response.status_code == 200
     assert 'Test Course' in response.content.decode()
 

@@ -53,7 +53,7 @@ class CourseDetailView(DetailView):
                 messages.success(request, f"You have successfully enrolled in {self.object.name}.")
             else:
                 messages.info(request, f"You are already enrolled in {self.object.name}.")
-        return redirect(reverse('course', kwargs={'pk': self.object.pk}))
+        return redirect(reverse('course-detail', kwargs={'pk': self.object.pk}))
 
 
 class CourseCreateView(AutoPermissionRequiredMixin, CreateView):
@@ -102,7 +102,7 @@ class CourseLeaveView(View):
         if request.user.is_authenticated and request.user in course.students.all():
             course.students.remove(request.user)
             messages.success(request, f"You have successfully left the course '{course.name}'.")
-        return redirect('course', pk=pk)
+        return redirect('course-detail', pk=pk)
 
 
 def course_detail(request, course_id):
@@ -132,4 +132,4 @@ def remove_student(request, course_id, student_id):
         course.students.remove(student)
         messages.success(request, f"{student.first_name} {student.last_name} has been removed from the course.")
     
-    return redirect('course_detail', course_id=course_id)
+    return redirect('course-detail', pk=course_id)
