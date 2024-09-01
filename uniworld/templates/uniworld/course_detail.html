@@ -17,6 +17,11 @@
                 <li class="nav-item" role="presentation">
                     <button class="nav-link" id="students-tab" data-bs-toggle="tab" data-bs-target="#students" type="button" role="tab" aria-controls="students" aria-selected="false">Enrolled Students</button>
                 </li>
+                {% if user == course.teacher %}
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="blocked-students-tab" data-bs-toggle="tab" data-bs-target="#blocked-students" type="button" role="tab" aria-controls="blocked-students" aria-selected="false">Blocked Students</button>
+                    </li>
+                {% endif %}
             </ul>
             
             <div class="tab-content mt-3" id="courseTabContent">
@@ -125,6 +130,52 @@
                         </form>
                     {% endif %}
                 </div>
+                {% if user == course.teacher %}
+                    <div class="tab-pane fade" id="blocked-students" role="tabpanel" aria-labelledby="blocked-students-tab">
+                        <h3 class="h5 mb-3">Blocked Students</h3>
+                        {% if blocked_students %}
+                            <ul class="list-group">
+                                {% for student in blocked_students %}
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span>{{ student.first_name }} {{ student.last_name }}</span>
+                                        <form method="post" action="{% url 'unblock-student' course.id student.id %}" class="d-inline">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-success btn-sm" onclick="return confirm('Are you sure you want to unblock this student?');">
+                                                <i class="bi bi-person-check-fill me-1"></i>Unblock
+                                            </button>
+                                        </form>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                            
+                            <nav aria-label="Page navigation" class="mt-4">
+                                <ul class="pagination">
+                                    {% if blocked_students.has_previous %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?blocked_page={{ blocked_students.previous_page_number }}">&laquo; Previous</a>
+                                        </li>
+                                    {% endif %}
+
+                                    {% for num in blocked_students.paginator.page_range %}
+                                        {% if blocked_students.number == num %}
+                                            <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                                        {% else %}
+                                            <li class="page-item"><a class="page-link" href="?blocked_page={{ num }}">{{ num }}</a></li>
+                                        {% endif %}
+                                    {% endfor %}
+
+                                    {% if blocked_students.has_next %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?blocked_page={{ blocked_students.next_page_number }}">Next &raquo;</a>
+                                        </li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                        {% else %}
+                            <p class="text-muted">No blocked students.</p>
+                        {% endif %}
+                    </div>
+                {% endif %}
             </div>
         </div>
     </article>

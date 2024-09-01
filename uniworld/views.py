@@ -62,7 +62,13 @@ class CourseDetailView(AutoPermissionRequiredMixin, DetailView):
         page_number = self.request.GET.get('page')
         enrolled_students = paginator.get_page(page_number)
 
+        blocked_students_list = self.object.blocked_students.all().order_by('last_name', 'first_name')
+        blocked_paginator = Paginator(blocked_students_list, 10)  # Show 10 blocked students per page
+        blocked_page_number = self.request.GET.get('blocked_page')
+        blocked_students = blocked_paginator.get_page(blocked_page_number)
+
         context['enrolled_students'] = enrolled_students
+        context['blocked_students'] = blocked_students
         context['is_enrolled'] = self.request.user in self.object.students.all()
         return context
 
@@ -205,4 +211,17 @@ class CourseEnrollView(View):
         else:
             messages.info(request, "You are already enrolled in this course.")
 
+        return redirect('course-detail', pk=course_id)
+
+
+class UnblockStudentView(LoginRequiredMixin, View):
+    def post(self, request, course_id, student_id):
+        course = get_object_or_404(Course, pk=course_id)
+        if request.user != course.teacher:
+            return HttpResponseForbidden("You don't have permission to unblock students from this course.")
+        
+        student = get_object_or_404(get_user_model(), pk=student_id)
+        course.blocked_students.remove(student)
+        messages.success(request, f"{student.first_name} {student.last_name} has been unblocked from the course.")
+        
         return redirect('course-detail', pk=course_id)
