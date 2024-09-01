@@ -2,8 +2,6 @@
 {% load rules %}
 {% load django_bootstrap5 %}
 
-{% bootstrap_css %}
-{% bootstrap_javascript %}
 
 {% has_perm 'uniworld.add_course' request.user as can_add_course %}
 
@@ -14,6 +12,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{% static 'css/style.css' %}"/>
     <link rel="icon" href="{% static 'images/favicon.webp' %}" type="image/x-icon"/>
+    {% bootstrap_css %}
     <title>E-Learning App</title>
 </head>
 
@@ -39,7 +38,7 @@
                         </li>
                         {% if request.user.is_authenticated %}
                             <li class="nav-item">
-                                <a class="nav-link" href="{% url 'rooms' %}">Chat Rooms</a>
+                                <a class="nav-link" href="{% url 'room' 1 %}">Chat</a>
                             </li>
                         {% endif %}
                     </ul>
@@ -98,6 +97,9 @@
         </span>
     </div>
 </footer>
-{% block scripts %}{% endblock %}
+{% bootstrap_javascript %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://code.jquery.com/ui/1.13.1/jquery-ui.min.js"></script>
+{% block extra_js %}{% endblock %}
 </body>
 </html>

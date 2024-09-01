@@ -16,6 +16,8 @@ from uniworld.models import Course
 from chat.models import Room
 from django.contrib.auth import get_user_model
 from django.db.models import Q
+from django.contrib.auth.models import Group
+import re
 
 def heartbeat(request):
     return HttpResponse("alive")
@@ -166,7 +168,7 @@ class AddStudentsView(LoginRequiredMixin, View):
             return HttpResponseForbidden("You don't have permission to add students to this course.")
         
         student_emails = request.POST.get('student_emails', '').split(',')
-        student_emails = [email.strip() for email in student_emails if email.strip()]
+        student_emails = [re.search(r'[\w\.-]+@[\w\.-]+', email).group() for email in student_emails]
         
         added_count = 0
         for email in student_emails:
@@ -184,15 +186,21 @@ class AddStudentsView(LoginRequiredMixin, View):
 
 class StudentSearchView(View):
     def get(self, request, *args, **kwargs):
-        query = request.GET.get('term', '')
+        term = request.GET.get('term', '')
         course_id = request.GET.get('course_id')
-        course = Course.objects.get(id=course_id)
-        students = course.students.filter(
-            Q(first_name__icontains=query) | 
-            Q(last_name__icontains=query) | 
-            Q(email__icontains=query)
-        )[:10]  # Limit to 10 results
-        results = [{'value': f"{s.first_name} {s.last_name}", 'label': s.email} for s in students]
+        
+        User = get_user_model()
+        students_group = Group.objects.get(name='students')
+        students = User.objects.filter(
+            Q(first_name__icontains=term) | 
+            Q(last_name__icontains=term) | 
+            Q(email__icontains=term),
+            groups=students_group
+        ).exclude(
+            enrolled_courses__id=course_id
+        )[:10]
+        
+        results = [{'label': f"{s.first_name} {s.last_name} ({s.email})", 'value': s.email} for s in students]
         return JsonResponse(results, safe=False)
 
 

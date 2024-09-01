@@ -44,7 +44,7 @@
     </section>
 {% endblock %}
 
-{% block scripts %}
+{% block extra_js %}
     {{ room.slug|default:room.name|json_script:"room-name" }}
     {{ request.user.username|json_script:"json-username" }}
     {% url 'profile' 0 as profile_url %}
