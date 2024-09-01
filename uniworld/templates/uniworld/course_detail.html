@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
-
 {% load django_bootstrap5 %}
+{% load rules %}
 
 {% block content %}
     <article class="card shadow mb-4">
@@ -39,7 +39,7 @@
                                         </button>
                                     </form>
                                 {% else %}
-                                    <form method="post">
+                                    <form method="post" action="{% url 'course_enroll' course.id %}">
                                         {% csrf_token %}
                                         <button type="submit" class="btn btn-primary mb-4 w-100">
                                             <i class="bi bi-person-plus-fill me-2"></i>Enroll in this course
@@ -67,12 +67,20 @@
                                         {{ student.first_name }} {{ student.last_name }}
                                     </a>
                                     {% if user == course.teacher %}
-                                        <form method="post" action="{% url 'remove-student' course.id student.id %}" class="d-inline">
-                                            {% csrf_token %}
-                                            <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to remove this student?');">
-                                                <i class="bi bi-person-x-fill me-1"></i>Remove
-                                            </button>
-                                        </form>
+                                        <div>
+                                            <form method="post" action="{% url 'remove-student' course.id student.id %}" class="d-inline">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to remove this student?');">
+                                                    <i class="bi bi-person-x-fill me-1"></i>Remove
+                                                </button>
+                                            </form>
+                                            <form method="post" action="{% url 'block-student' course.id student.id %}" class="d-inline">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-warning btn-sm" onclick="return confirm('Are you sure you want to block this student?');">
+                                                    <i class="bi bi-slash-circle me-1"></i>Block
+                                                </button>
+                                            </form>
+                                        </div>
                                     {% endif %}
                                 </li>
                             {% endfor %}
@@ -104,15 +112,38 @@
                     {% else %}
                         <p class="text-muted">No students enrolled yet.</p>
                     {% endif %}
+                    
+                    {% if user == course.teacher %}
+                        <h4 class="h5 mt-4 mb-3">Add Students</h4>
+                        <form method="post" action="{% url 'add-students' course.id %}">
+                            {% csrf_token %}
+                            <div class="mb-3">
+                                <label for="studentEmails" class="form-label">Student Emails (comma-separated)</label>
+                                <input type="text" class="form-control" id="studentEmails" name="student_emails" placeholder="student1@example.com, student2@example.com">
+                            </div>
+                            <button type="submit" class="btn btn-primary">Add Students</button>
+                        </form>
+                    {% endif %}
                 </div>
             </div>
         </div>
     </article>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
     <script>
-    function confirmLeave() {
-        if (confirm("Are you sure you want to leave this course?")) {
-            document.getElementById("leaveCourseForm").submit();
-        }
-    }
+    $(function() {
+        $("#studentSearch").autocomplete({
+            source: function(request, response) {
+                $.getJSON("{% url 'student-search' %}", {
+                    term: request.term,
+                    course_id: "{{ course.id }}"
+                }, response);
+            },
+            minLength: 2,
+            select: function(event, ui) {
+                $("#studentSearch").val(ui.item.value);
+                $("form").submit();
+            }
+        });
+    });
     </script>
 {% endblock content %}
