@@ -41,8 +41,14 @@ class CourseDetailView(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['enrolled_students'] = self.object.students.all()
-        context['is_enrolled'] = self.request.user in context['enrolled_students']
+        enrolled_students_list = self.object.students.all().order_by('last_name', 'first_name')
+        
+        paginator = Paginator(enrolled_students_list, 10)  # Show 10 students per page
+        page_number = self.request.GET.get('page')
+        enrolled_students = paginator.get_page(page_number)
+
+        context['enrolled_students'] = enrolled_students
+        context['is_enrolled'] = self.request.user in self.object.students.all()
         return context
 
     def post(self, request, *args, **kwargs):
@@ -105,31 +111,14 @@ class CourseLeaveView(View):
         return redirect('course-detail', pk=pk)
 
 
-def course_detail(request, course_id):
-    course = get_object_or_404(Course, pk=course_id)
-    enrolled_students_list = course.students.all().order_by('last_name', 'first_name')
-    
-    paginator = Paginator(enrolled_students_list, 10)  # Show 10 students per page
-    page_number = request.GET.get('page')
-    enrolled_students = paginator.get_page(page_number)
-
-    context = {
-        'course': course,
-        'enrolled_students': enrolled_students,
-        'is_enrolled': request.user in course.students.all(),
-    }
-    return render(request, 'uniworld/course_detail.html', context)
-
-
-@login_required
-def remove_student(request, course_id, student_id):
-    course = get_object_or_404(Course, pk=course_id)
-    if request.user != course.teacher:
-        return HttpResponseForbidden("You don't have permission to remove students from this course.")
-    
-    if request.method == 'POST':
+class RemoveStudentView(LoginRequiredMixin, View):
+    def post(self, request, course_id, student_id):
+        course = get_object_or_404(Course, pk=course_id)
+        if request.user != course.teacher:
+            return HttpResponseForbidden("You don't have permission to remove students from this course.")
+        
         student = get_object_or_404(course.students, pk=student_id)
         course.students.remove(student)
         messages.success(request, f"{student.first_name} {student.last_name} has been removed from the course.")
-    
-    return redirect('course-detail', pk=course_id)
+        
+        return redirect('course-detail', pk=course_id)
