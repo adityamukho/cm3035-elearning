@@ -93,29 +93,31 @@
                             {% endfor %}
                         </ul>
                         
-                        <nav aria-label="Page navigation" class="mt-4">
-                            <ul class="pagination">
-                                {% if enrolled_students.has_previous %}
-                                    <li class="page-item">
-                                        <a class="page-link" href="?page={{ enrolled_students.previous_page_number }}">&laquo; Previous</a>
-                                    </li>
-                                {% endif %}
-
-                                {% for num in enrolled_students.paginator.page_range %}
-                                    {% if enrolled_students.number == num %}
-                                        <li class="page-item active"><span class="page-link">{{ num }}</span></li>
-                                    {% else %}
-                                        <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+                        {% if enrolled_students.paginator.num_pages > 1 %}
+                            <nav aria-label="Page navigation" class="mt-4">
+                                <ul class="pagination">
+                                    {% if enrolled_students.has_previous %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ enrolled_students.previous_page_number }}">&laquo; Previous</a>
+                                        </li>
                                     {% endif %}
-                                {% endfor %}
 
-                                {% if enrolled_students.has_next %}
-                                    <li class="page-item">
-                                        <a class="page-link" href="?page={{ enrolled_students.next_page_number }}">Next &raquo;</a>
-                                    </li>
-                                {% endif %}
-                            </ul>
-                        </nav>
+                                    {% for num in enrolled_students.paginator.page_range %}
+                                        {% if enrolled_students.number == num %}
+                                            <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                                        {% else %}
+                                            <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+                                        {% endif %}
+                                    {% endfor %}
+
+                                    {% if enrolled_students.has_next %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ enrolled_students.next_page_number }}">Next &raquo;</a>
+                                        </li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                        {% endif %}
                     {% else %}
                         <p class="text-muted">No students enrolled yet.</p>
                     {% endif %}
@@ -155,29 +157,31 @@
                                 {% endfor %}
                             </ul>
                             
-                            <nav aria-label="Page navigation" class="mt-4">
-                                <ul class="pagination">
-                                    {% if blocked_students.has_previous %}
-                                        <li class="page-item">
-                                            <a class="page-link" href="?blocked_page={{ blocked_students.previous_page_number }}">&laquo; Previous</a>
-                                        </li>
-                                    {% endif %}
-
-                                    {% for num in blocked_students.paginator.page_range %}
-                                        {% if blocked_students.number == num %}
-                                            <li class="page-item active"><span class="page-link">{{ num }}</span></li>
-                                        {% else %}
-                                            <li class="page-item"><a class="page-link" href="?blocked_page={{ num }}">{{ num }}</a></li>
+                            {% if blocked_students.paginator.num_pages > 1 %}
+                                <nav aria-label="Page navigation" class="mt-4">
+                                    <ul class="pagination">
+                                        {% if blocked_students.has_previous %}
+                                            <li class="page-item">
+                                                <a class="page-link" href="?blocked_page={{ blocked_students.previous_page_number }}">&laquo; Previous</a>
+                                            </li>
                                         {% endif %}
-                                    {% endfor %}
 
-                                    {% if blocked_students.has_next %}
-                                        <li class="page-item">
-                                            <a class="page-link" href="?blocked_page={{ blocked_students.next_page_number }}">Next &raquo;</a>
-                                        </li>
-                                    {% endif %}
-                                </ul>
-                            </nav>
+                                        {% for num in blocked_students.paginator.page_range %}
+                                            {% if blocked_students.number == num %}
+                                                <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                                            {% else %}
+                                                <li class="page-item"><a class="page-link" href="?blocked_page={{ num }}">{{ num }}</a></li>
+                                            {% endif %}
+                                        {% endfor %}
+
+                                        {% if blocked_students.has_next %}
+                                            <li class="page-item">
+                                                <a class="page-link" href="?blocked_page={{ blocked_students.next_page_number }}">Next &raquo;</a>
+                                            </li>
+                                        {% endif %}
+                                    </ul>
+                                </nav>
+                            {% endif %}
                         {% else %}
                             <p class="text-muted">No blocked students.</p>
                         {% endif %}

@@ -3,6 +3,11 @@
 {% block content %}
     <header class="mb-4">
         <h2 class="text-center">{{ room.name }}</h2>
+        {% if room.course %}
+            <div class="text-center">
+                <a href="{% url 'course-detail' room.course.id %}" class="btn btn-secondary btn-sm">Back to Course</a>
+            </div>
+        {% endif %}
     </header>
 
     <section class="container">
