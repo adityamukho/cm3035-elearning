@@ -233,3 +233,31 @@ class UnblockStudentView(LoginRequiredMixin, View):
         messages.success(request, f"{student.first_name} {student.last_name} has been unblocked from the course.")
         
         return redirect('course-detail', pk=course_id)
+
+class SearchView(View):
+    def get(self, request, *args, **kwargs):
+        query = request.GET.get('q', '')
+        results = []
+
+        if query:
+            # Search courses
+            courses = Course.objects.filter(name__icontains=query)
+            for course in courses:
+                results.append({
+                    'label': course.name,
+                    'url': reverse('course-detail', args=[course.pk])
+                })
+
+            # Search users in 'teachers' or 'students' groups
+            User = get_user_model()
+            users = User.objects.filter(
+                Q(groups__name='teachers') | Q(groups__name='students'),
+                Q(first_name__icontains=query) | Q(last_name__icontains=query) | Q(email__icontains=query)
+            )
+            for user in users:
+                results.append({
+                    'label': f"{user.first_name} {user.last_name} ({user.email})",
+                    'url': reverse('profile', args=[user.pk])
+                })
+
+        return JsonResponse({'results': results})

@@ -44,6 +44,13 @@
                     </ul>
                     <ul class="d-flex navbar-nav mb-2 mb-lg-0">
                         {% if request.user.is_authenticated %}
+                            <li class="nav-item">
+                                <form class="form-inline my-2 my-lg-0" id="search-form">
+                                    <input class="form-control mr-sm-2" type="search" placeholder="Search"
+                                           aria-label="Search" id="search-input">
+                                    <div id="search-results" class="dropdown-menu"></div>
+                                </form>
+                            </li>
                             <li class="nav-item mt-2">
                                 <a class="nav-link" href="{% url 'profile' request.user.pk %}"><i
                                         class="bi bi-person"></i> {{ request.user | title }}</a>
@@ -100,6 +107,29 @@
 {% bootstrap_javascript %}
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://code.jquery.com/ui/1.13.1/jquery-ui.min.js"></script>
+<script>
+        $(document).ready(function() {
+            $('#search-input').on('input', function() {
+                var query = $(this).val();
+                if (query.length >= 2) {
+                    $.ajax({
+                        url: "{% url 'search' %}",
+                        data: {
+                            'q': query
+                        },
+                        success: function(data) {
+                            $('#search-results').empty().show();
+                            data.results.forEach(function(item) {
+                                $('#search-results').append('<a class="dropdown-item" href="' + item.url + '">' + item.label + '</a>');
+                            });
+                        }
+                    });
+                } else {
+                    $('#search-results').hide();
+                }
+            });
+        });
+    </script>
 {% block extra_js %}{% endblock %}
 </body>
 </html>
