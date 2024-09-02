@@ -40,6 +40,14 @@ class Course(RulesModel):
             return True
         return False
 
+    def average_rating(self):
+        feedbacks = self.feedback.all()
+        if feedbacks.exists():
+            return round(feedbacks.aggregate(models.Avg('rating'))['rating__avg'], 1)
+        return 0
+
+    average_rating = property(average_rating)
+
 class Feedback(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='feedback')
     user = models.ForeignKey(User, on_delete=models.CASCADE)

@@ -15,6 +15,15 @@
                     <div class="col">
                         <div class="card card-cover h-100 overflow-hidden text-bg-dark rounded-4 shadow-lg"
                              style="background-image: url('https://picsum.photos/seed/{{ course.id }}/400/200'); background-size: cover;">
+                            <div class="overlay position-absolute top-0 start-0 p-3 text-white d-flex align-items-center">
+                                <div class="me-3 d-flex align-items-center">
+                                    <span class="star">&#9733;</span>
+                                    <span class="ms-1">{{ course.average_rating|default:"0" }}</span>
+                                </div>
+                                <div>
+                                    <i class="bi bi-people-fill"></i> {{ course.total_students }} students
+                                </div>
+                            </div>
                             <div class="d-flex flex-column h-100 p-5 pb-3 text-shadow-1 opacity-75">
                                 <h3 class="mt-5 mb-4 display-6 lh-1 fw-bold bg-light-subtle text-black-50">
                                     <a href="{% url 'course-detail' course.pk %}" class="text-decoration-none text-black-50">{{ course.name }}</a>
@@ -27,7 +36,7 @@
                                         </a>
                                     </li>
                                     <li class="d-flex align-items-center">
-                                        <small>{{ course.total_students }} students</small>
+                                        <small>{{ course.teacher.first_name }} {{ course.teacher.last_name }}</small>
                                     </li>
                                 </ul>
                             </div>

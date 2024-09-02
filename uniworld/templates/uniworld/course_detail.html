@@ -4,7 +4,19 @@
 
 {% block content %}
     <article class="card shadow mb-4">
-        <div class="card-img-top overflow-hidden" style="height: 200px; background-image: url('https://picsum.photos/seed/{{ course.id }}/400/200'); background-size: cover;"></div>
+        <div class="card-img-top overflow-hidden position-relative" style="height: 200px; background-image: url('https://picsum.photos/seed/{{ course.id }}/400/200'); background-size: cover;">
+            <div class="overlay position-absolute top-0 start-0 p-3 text-white">
+                <div class="d-flex align-items-center">
+                    <div class="me-3 d-flex align-items-center">
+                        <span class="star">&#9733;</span>
+                        <span class="ms-1">{{ course.average_rating|default:"0" }}</span>
+                    </div>
+                    <div>
+                        <i class="bi bi-people-fill"></i> {{ course.total_students }} students
+                    </div>
+                </div>
+            </div>
+        </div>
         <div class="card-body">
             <header class="mb-4">
                 <h2 class="card-title h4">{{ course.name }}</h2>
@@ -170,8 +182,8 @@
                                         <div>
                                             <strong>{{ feedback.user.first_name }} {{ feedback.user.last_name }}</strong>
                                             <div class="star-rating">
-                                                {% for i in "12345" %}
-                                                    <span class="star{% if i <= feedback.rating %} filled{% endif %}">&#9733;</span>
+                                                {% for i in "54321" %}
+                                                    <span class="star{% if i|add:'0' <= feedback.rating %} filled{% else %} unfilled{% endif %}">&#9733;</span>
                                                 {% endfor %}
                                             </div>
                                             <p>{{ feedback.comment }}</p>
