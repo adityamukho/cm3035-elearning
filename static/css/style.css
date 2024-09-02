@@ -42,3 +42,33 @@
 ul.ui-autocomplete {
     top: inherit !important;
 }
+
+.star-rating {
+    direction: rtl;
+    display: inline-block;
+    font-size: 1.5em;
+    unicode-bidi: bidi-override;
+}
+
+.star-rating input {
+    display: none;
+}
+
+.star-rating label {
+    color: #ddd;
+    cursor: pointer;
+    display: inline-block;
+    font-size: 1.5em;
+    padding: 0;
+    position: relative;
+}
+
+.star-rating label:hover,
+.star-rating label:hover ~ label,
+.star-rating input:checked ~ label {
+    color: #f5b301;
+}
+
+.star-rating .star.filled {
+    color: #f5b301;
+}

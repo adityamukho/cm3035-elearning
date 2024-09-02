@@ -12,7 +12,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from .models import Course
 
-from uniworld.models import Course
+from uniworld.models import Course, Feedback
 from chat.models import Room
 from django.contrib.auth import get_user_model
 from django.db.models import Q
@@ -72,6 +72,7 @@ class CourseDetailView(AutoPermissionRequiredMixin, DetailView):
         context['enrolled_students'] = enrolled_students
         context['blocked_students'] = blocked_students
         context['is_enrolled'] = self.request.user in self.object.students.all()
+        context['feedback_list'] = self.object.feedback.all().order_by('-created_at')
         return context
 
     def post(self, request, *args, **kwargs):
@@ -261,3 +262,22 @@ class SearchView(View):
                 })
 
         return JsonResponse({'results': results})
+
+class CourseFeedbackView(LoginRequiredMixin, View):
+    def post(self, request, course_id):
+        course = get_object_or_404(Course, pk=course_id)
+        rating = request.POST.get('rating')
+        comment = request.POST.get('comment', '')
+
+        if rating:
+            Feedback.objects.create(
+                course=course,
+                user=request.user,
+                rating=rating,
+                comment=comment
+            )
+            messages.success(request, "Your feedback has been submitted.")
+        else:
+            messages.error(request, "Please provide a rating.")
+
+        return redirect('course-detail', pk=course_id)

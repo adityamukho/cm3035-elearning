@@ -17,6 +17,9 @@
                 <li class="nav-item" role="presentation">
                     <button class="nav-link" id="students-tab" data-bs-toggle="tab" data-bs-target="#students" type="button" role="tab" aria-controls="students" aria-selected="false">Enrolled Students</button>
                 </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="feedback-tab" data-bs-toggle="tab" data-bs-target="#feedback" type="button" role="tab" aria-controls="feedback" aria-selected="false">Feedback</button>
+                </li>
                 {% if user == course.teacher %}
                     <li class="nav-item" role="presentation">
                         <button class="nav-link" id="blocked-students-tab" data-bs-toggle="tab" data-bs-target="#blocked-students" type="button" role="tab" aria-controls="blocked-students" aria-selected="false">Blocked Students</button>
@@ -137,6 +140,49 @@
                             </div>
                             <button type="submit" class="btn btn-primary">Add Students</button>
                         </form>
+                    {% endif %}
+                </div>
+                <div class="tab-pane fade" id="feedback" role="tabpanel" aria-labelledby="feedback-tab">
+                    <h3 class="h5 mb-3">Leave Feedback</h3>
+                    <form method="post" action="{% url 'course-feedback' course.id %}">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="rating" class="form-label">Rating</label>
+                            <div id="rating" class="star-rating">
+                                {% for i in "12345" %}
+                                    <input type="radio" id="star{{ i }}" name="rating" value="{{ i }}">
+                                    <label for="star{{ i }}" title="{{ i }} stars">&#9733;</label>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="comment" class="form-label">Comment</label>
+                            <textarea class="form-control" id="comment" name="comment" rows="3"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Submit Feedback</button>
+                    </form>
+                    <h3 class="h5 mt-4 mb-3">Student Feedback</h3>
+                    {% if feedback_list %}
+                        <ul class="list-group">
+                            {% for feedback in feedback_list %}
+                                <li class="list-group-item">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <strong>{{ feedback.user.first_name }} {{ feedback.user.last_name }}</strong>
+                                            <div class="star-rating">
+                                                {% for i in "12345" %}
+                                                    <span class="star{% if i <= feedback.rating %} filled{% endif %}">&#9733;</span>
+                                                {% endfor %}
+                                            </div>
+                                            <p>{{ feedback.comment }}</p>
+                                        </div>
+                                        <small class="text-muted">{{ feedback.created_at|date:"M d, Y" }}</small>
+                                    </div>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="text-muted">No feedback yet.</p>
                     {% endif %}
                 </div>
                 {% if user == course.teacher %}
