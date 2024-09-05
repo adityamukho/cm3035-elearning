@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% load django_bootstrap5 %}
+
+{% block content %}
+<div class="container py-5">
+    <h2>Edit Course Material</h2>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {% bootstrap_form form %}
+        {% if lecture_form %}
+            <h3>Lecture Details</h3>
+            {% bootstrap_form lecture_form %}
+        {% elif assignment_form %}
+            <h3>Assignment Details</h3>
+            {% bootstrap_form assignment_form %}
+        {% endif %}
+        <button type="submit" class="btn btn-primary">Save Changes</button>
+    </form>
+</div>
+{% endblock %}

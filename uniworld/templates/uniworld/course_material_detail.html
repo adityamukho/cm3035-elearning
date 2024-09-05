@@ -4,6 +4,11 @@
 {% block content %}
 <div class="container py-5">
     <h2>{{ material.title }}</h2>
+    {% if user == material.course.teacher %}
+        <a href="{% url 'edit-course-material' material.id %}" class="btn btn-primary mb-3">
+            <i class="bi bi-pencil-square me-2"></i>Edit Material
+        </a>
+    {% endif %}
     {% if material.type == 'lecture' %}
         <div class="lecture-content">
             <h3>Lecture Content</h3>
@@ -26,16 +31,20 @@
     {% elif material.type == 'assignment' %}
         <div class="assignment-content">
             <h3>Assignment</h3>
-            <p>{{ assignment.questions }}</p>
-            <h4>Submit Your Assignment</h4>
-            <form method="post" action="{% url 'submit-assignment' assignment.id %}">
-                {% csrf_token %}
-                <div class="mb-3">
-                    <label for="submission" class="form-label">Your Submission</label>
-                    <textarea class="form-control" id="submission" name="submission" rows="5" required></textarea>
-                </div>
-                <button type="submit" class="btn btn-primary">Submit</button>
-            </form>
+            {% if assignment %}
+                <p>{{ assignment.questions }}</p>
+                <h4>Submit Your Assignment</h4>
+                <form method="post" action="{% url 'submit-assignment' assignment.pk %}">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="submission" class="form-label">Your Submission</label>
+                        <textarea class="form-control" id="submission" name="submission" rows="5" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Submit</button>
+                </form>
+            {% else %}
+                <p>Assignment details are not available.</p>
+            {% endif %}
         </div>
     {% endif %}
     <a href="{% url 'course-material' material.course.id %}" class="btn btn-secondary mt-3">

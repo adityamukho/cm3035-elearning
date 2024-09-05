@@ -23,4 +23,5 @@ urlpatterns = [
     path('search/', SearchView.as_view(), name='search'),
     path('course/<int:course_id>/feedback/', CourseFeedbackView.as_view(), name='course-feedback'),
     path('assignment/<int:assignment_id>/submit/', SubmitAssignmentView.as_view(), name='submit-assignment'),
+    path('course/material/<int:pk>/edit/', EditCourseMaterialView.as_view(), name='edit-course-material'),
 ]

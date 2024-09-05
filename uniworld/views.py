@@ -9,7 +9,7 @@ from rules.contrib.views import AutoPermissionRequiredMixin
 from django.views import View
 from django.core.paginator import Paginator
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from .models import Course, CourseMaterial, Lecture, Assignment, AssignmentSubmission
 from .forms import CourseMaterialForm, LectureForm, AssignmentForm
 
@@ -398,3 +398,37 @@ class SubmitAssignmentView(LoginRequiredMixin, View):
             submission=submission_text
         )
         return redirect('course-material-detail', pk=assignment.material.id)
+
+class EditCourseMaterialView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    model = CourseMaterial
+    template_name = 'uniworld/edit_course_material.html'
+    form_class = CourseMaterialForm
+
+    def test_func(self):
+        material = self.get_object()
+        return self.request.user == material.course.teacher
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        material = self.get_object()
+        if material.type == 'lecture':
+            context['lecture_form'] = LectureForm(instance=material.lecture)
+        elif material.type == 'assignment':
+            context['assignment_form'] = AssignmentForm(instance=material.assignment)
+        return context
+
+    def form_valid(self, form):
+        context = self.get_context_data()
+        material = form.save()
+        if material.type == 'lecture':
+            lecture_form = LectureForm(self.request.POST, self.request.FILES, instance=material.lecture)
+            if lecture_form.is_valid():
+                lecture_form.save()
+        elif material.type == 'assignment':
+            assignment_form = AssignmentForm(self.request.POST, instance=material.assignment)
+            if assignment_form.is_valid():
+                assignment_form.save()
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse_lazy('course-material', kwargs={'course_id': self.object.course.id})
