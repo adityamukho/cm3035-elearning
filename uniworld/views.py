@@ -397,12 +397,19 @@ class SubmitAssignmentView(LoginRequiredMixin, View):
             student=request.user,
             submission=submission_text
         )
-        return redirect('course-material-detail', pk=assignment.material.id)
+        messages.success(request, "Your assignment has been submitted successfully!")
+        return redirect(reverse('course-material', kwargs={'course_id': assignment.material.course.id}))
 
 class EditCourseMaterialView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = CourseMaterial
     template_name = 'uniworld/edit_course_material.html'
     form_class = CourseMaterialForm
+
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        form.fields['type'].widget.attrs['readonly'] = True
+        form.fields['type'].widget.attrs['disabled'] = True
+        return form
 
     def test_func(self):
         material = self.get_object()
@@ -419,7 +426,7 @@ class EditCourseMaterialView(LoginRequiredMixin, UserPassesTestMixin, UpdateView
 
     def form_valid(self, form):
         context = self.get_context_data()
-        material = form.save()
+        material = form.save(commit=False)
         if material.type == 'lecture':
             lecture_form = LectureForm(self.request.POST, self.request.FILES, instance=material.lecture)
             if lecture_form.is_valid():
@@ -428,6 +435,7 @@ class EditCourseMaterialView(LoginRequiredMixin, UserPassesTestMixin, UpdateView
             assignment_form = AssignmentForm(self.request.POST, instance=material.assignment)
             if assignment_form.is_valid():
                 assignment_form.save()
+        material.save()
         return super().form_valid(form)
 
     def get_success_url(self):

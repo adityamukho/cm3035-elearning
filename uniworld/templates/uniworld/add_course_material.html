@@ -16,7 +16,9 @@
         <button type="submit" class="btn btn-primary">Add Material</button>
     </form>
 </div>
+{% endblock %}
 
+{% block extra_js %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const typeField = document.querySelector('#id_type');
@@ -46,6 +48,9 @@
 
         typeField.addEventListener('change', toggleFields);
         toggleFields();
+
+        // Ensure the date input is set to 'date' type
+        $('input[name="due_date"]').attr('type', 'date');
     });
 </script>
 {% endblock %}
