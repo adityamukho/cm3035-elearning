@@ -4,11 +4,16 @@
 {% block content %}
     <div class="center">
         <h2>Courses</h2>
-        {% if can_add_course %}
-            <a href="{% url 'course-create' %}" class="btn btn-primary mb-3">
-                <i class="bi bi-plus-circle me-2"></i>Create New Course
+        <div class="mb-3">
+            <a href="{% url 'courses' %}?filter=my_courses" class="btn btn-secondary me-2">
+                <i class="bi bi-person-circle me-2"></i>My Courses
             </a>
-        {% endif %}
+            {% if can_add_course %}
+                <a href="{% url 'course-create' %}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle me-2"></i>Create New Course
+                </a>
+            {% endif %}
+        </div>
         {% if course_list %}
             <div class="row row-cols-1 row-cols-lg-3 align-items-stretch g-4 py-5">
                 {% for course in course_list %}

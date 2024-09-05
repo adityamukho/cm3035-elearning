@@ -33,7 +33,16 @@ class CourseListView(LoginRequiredMixin, ListView):
     context_object_name = 'course_list'
 
     def get_queryset(self):
-        return Course.objects.exclude(blocked_students=self.request.user)
+        queryset = Course.objects.exclude(blocked_students=self.request.user)
+        filter_param = self.request.GET.get('filter')
+
+        if filter_param == 'my_courses':
+            if self.request.user.groups.filter(name='teachers').exists():
+                queryset = queryset.filter(teacher=self.request.user)
+            else:
+                queryset = queryset.filter(students=self.request.user)
+
+        return queryset
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
