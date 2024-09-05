@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% load django_bootstrap5 %}
+
+{% block content %}
+<div class="container py-5">
+    <h2>Add Course Material for {{ course.name }}</h2>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {% bootstrap_form material_form %}
+        <div id="lecture-fields" style="display: none;">
+            {% bootstrap_form lecture_form %}
+        </div>
+        <div id="assignment-fields" style="display: none;">
+            {% bootstrap_form assignment_form %}
+        </div>
+        <button type="submit" class="btn btn-primary">Add Material</button>
+    </form>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const typeField = document.querySelector('#id_type');
+        const lectureFields = document.querySelector('#lecture-fields');
+        const assignmentFields = document.querySelector('#assignment-fields');
+        const lectureInputs = lectureFields.querySelectorAll('input, textarea, select');
+        const assignmentInputs = assignmentFields.querySelectorAll('input, textarea, select');
+
+        function toggleFields() {
+            if (typeField.value === 'lecture') {
+                lectureFields.style.display = 'block';
+                assignmentFields.style.display = 'none';
+                lectureInputs.forEach(input => input.disabled = false);
+                assignmentInputs.forEach(input => input.disabled = true);
+            } else if (typeField.value === 'assignment') {
+                lectureFields.style.display = 'none';
+                assignmentFields.style.display = 'block';
+                lectureInputs.forEach(input => input.disabled = true);
+                assignmentInputs.forEach(input => input.disabled = false);
+            } else {
+                lectureFields.style.display = 'none';
+                assignmentFields.style.display = 'none';
+                lectureInputs.forEach(input => input.disabled = true);
+                assignmentInputs.forEach(input => input.disabled = true);
+            }
+        }
+
+        typeField.addEventListener('change', toggleFields);
+        toggleFields();
+    });
+</script>
+{% endblock %}

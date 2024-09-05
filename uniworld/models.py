@@ -57,3 +57,35 @@ class Feedback(models.Model):
 
     def __str__(self):
         return f"{self.user} - {self.course} - {self.rating}"
+
+class CourseMaterial(models.Model):
+    COURSE_MATERIAL_TYPES = [
+        ('lecture', 'Lecture'),
+        ('assignment', 'Assignment'),
+    ]
+
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='materials')
+    title = models.CharField(max_length=255)
+    type = models.CharField(max_length=10, choices=COURSE_MATERIAL_TYPES)
+    sequence = models.IntegerField()
+
+    class Meta:
+        ordering = ['sequence']
+
+class Lecture(models.Model):
+    material = models.OneToOneField(CourseMaterial, on_delete=models.CASCADE, primary_key=True)
+    content = models.TextField()
+    video_url = models.URLField(blank=True, null=True)
+    document = models.FileField(upload_to='lectures/', blank=True, null=True)
+
+class Assignment(models.Model):
+    material = models.OneToOneField(CourseMaterial, on_delete=models.CASCADE, primary_key=True)
+    due_date = models.DateTimeField()
+    questions = models.TextField()  # JSON or other format to store questions
+
+class AssignmentSubmission(models.Model):
+    assignment = models.ForeignKey(Assignment, on_delete=models.CASCADE, related_name='submissions')
+    student = models.ForeignKey(User, on_delete=models.CASCADE)
+    submission = models.TextField()  # JSON or other format to store answers
+    grade = models.FloatField(blank=True, null=True)
+    submitted_at = models.DateTimeField(auto_now_add=True)

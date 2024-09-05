@@ -10,7 +10,8 @@ from django.views import View
 from django.core.paginator import Paginator
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
-from .models import Course
+from .models import Course, CourseMaterial, Lecture, Assignment, AssignmentSubmission
+from .forms import CourseMaterialForm, LectureForm, AssignmentForm
 
 from uniworld.models import Course, Feedback
 from chat.models import Room
@@ -50,9 +51,10 @@ class CourseListView(LoginRequiredMixin, ListView):
         return context
 
 
-class CourseDetailView(AutoPermissionRequiredMixin, DetailView):
+class CourseDetailView(AutoPermissionRequiredMixin, LoginRequiredMixin, DetailView):
     model = Course
     context_object_name = 'course'
+    template_name = 'uniworld/course_detail.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -290,3 +292,109 @@ class CourseFeedbackView(LoginRequiredMixin, View):
             messages.error(request, "Please provide a rating.")
 
         return redirect('course-detail', pk=course_id)
+    
+class CourseMaterialListView(LoginRequiredMixin, ListView):
+    model = CourseMaterial
+    template_name = 'uniworld/course_material.html'
+    context_object_name = 'course_material'
+
+    def get_queryset(self):
+        course = get_object_or_404(Course, pk=self.kwargs['course_id'])
+        if self.request.user != course.teacher and self.request.user not in course.students.all():
+            return CourseMaterial.objects.none()
+        return course.materials.all()
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['course'] = get_object_or_404(Course, pk=self.kwargs['course_id'])
+        return context
+
+class CourseMaterialDetailView(LoginRequiredMixin, DetailView):
+    model = CourseMaterial
+    template_name = 'uniworld/course_material_detail.html'
+    context_object_name = 'material'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        material = self.get_object()
+        if material.type == 'lecture':
+            context['lecture'] = get_object_or_404(Lecture, material=material)
+        elif material.type == 'assignment':
+            context['assignment'] = get_object_or_404(Assignment, material=material)
+        return context
+    
+class AddCourseMaterialView(LoginRequiredMixin, View):
+    def get(self, request, course_id):
+        course = get_object_or_404(Course, pk=course_id)
+        if request.user != course.teacher:
+            return redirect('course-detail', pk=course_id)
+        
+        material_form = CourseMaterialForm()
+        lecture_form = LectureForm()
+        assignment_form = AssignmentForm()
+        return render(request, 'uniworld/add_course_material.html', {
+            'course': course,
+            'material_form': material_form,
+            'lecture_form': lecture_form,
+            'assignment_form': assignment_form,
+        })
+
+    def post(self, request, course_id):
+        course = get_object_or_404(Course, pk=course_id)
+        if request.user != course.teacher:
+            return redirect('course-detail', pk=course_id)
+        
+        material_form = CourseMaterialForm(request.POST)
+        if material_form.is_valid():
+            material = material_form.save(commit=False)
+            material.course = course
+            material.save()
+            
+            if material.type == 'lecture':
+                lecture_form = LectureForm(request.POST, request.FILES)
+                if lecture_form.is_valid():
+                    lecture = lecture_form.save(commit=False)
+                    lecture.material = material
+                    lecture.save()
+            elif material.type == 'assignment':
+                assignment_form = AssignmentForm(request.POST)
+                if assignment_form.is_valid():
+                    assignment = assignment_form.save(commit=False)
+                    assignment.material = material
+                    assignment.save()
+            
+            return redirect('course-material', course_id=course_id)
+        
+        lecture_form = LectureForm()
+        assignment_form = AssignmentForm()
+        return render(request, 'uniworld/add_course_material.html', {
+            'course': course,
+            'material_form': material_form,
+            'lecture_form': lecture_form,
+            'assignment_form': assignment_form,
+        })
+    
+class CourseMaterialDetailView(LoginRequiredMixin, DetailView):
+    model = CourseMaterial
+    template_name = 'uniworld/course_material_detail.html'
+    context_object_name = 'material'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        material = self.get_object()
+        if material.type == 'lecture':
+            context['lecture'] = get_object_or_404(Lecture, material=material)
+        elif material.type == 'assignment':
+            context['assignment'] = get_object_or_404(Assignment, material=material)
+        return context
+    
+class SubmitAssignmentView(LoginRequiredMixin, View):
+    def post(self, request, assignment_id):
+        assignment = get_object_or_404(Assignment, pk=assignment_id)
+        submission_text = request.POST.get('submission')
+        AssignmentSubmission.objects.create(
+            assignment=assignment,
+            student=request.user,
+            submission=submission_text
+        )
+        return redirect('course-material-detail', pk=assignment.material.id)

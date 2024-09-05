@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+{% load django_bootstrap5 %}
+
+{% block content %}
+<div class="container py-5">
+    <h2>{{ material.title }}</h2>
+    {% if material.type == 'lecture' %}
+        <div class="lecture-content">
+            <h3>Lecture Content</h3>
+            <p>{{ lecture.content }}</p>
+            {% if lecture.video_url %}
+                <div class="video-container">
+                    <h4>Video Lecture</h4>
+                    <iframe width="560" height="315" src="https://www.youtube.com/embed/{{ lecture.video_url }}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+                    <p>If the video does not load, <a href="https://www.youtube.com/watch?v={{ lecture.video_url }}" target="_blank">click here to watch it on YouTube</a>.</p>
+                </div>
+            {% endif %}
+            {% if lecture.document %}
+                <div class="document-container">
+                    <h4>Lecture Document</h4>
+                    <div id="pdf-container" style="width: 100%; max-height: 600px;"></div>
+                    <a href="{{ lecture.document.url }}" class="btn btn-primary mt-3" download>Download Document</a>
+                </div>
+            {% endif %}
+        </div>
+    {% elif material.type == 'assignment' %}
+        <div class="assignment-content">
+            <h3>Assignment</h3>
+            <p>{{ assignment.questions }}</p>
+            <h4>Submit Your Assignment</h4>
+            <form method="post" action="{% url 'submit-assignment' assignment.id %}">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label for="submission" class="form-label">Your Submission</label>
+                    <textarea class="form-control" id="submission" name="submission" rows="5" required></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">Submit</button>
+            </form>
+        </div>
+    {% endif %}
+    <a href="{% url 'course-material' material.course.id %}" class="btn btn-secondary mt-3">
+        <i class="bi bi-arrow-left me-2"></i>Back to Course Material
+    </a>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.min.js"></script>
+
+{% if lecture.document %}
+    {{ lecture.document.url|json_script:"document-url" }}
+{% endif %}
+
+<script>
+    var url = JSON.parse(document.getElementById('document-url').textContent);
+
+    if (url) {
+        // Asynchronous download of PDF
+        var loadingTask = pdfjsLib.getDocument(url);
+        loadingTask.promise.then(function(pdf) {
+            console.log('PDF loaded');
+
+            // Fetch the first page
+            var pageNumber = 1;
+            pdf.getPage(pageNumber).then(function(page) {
+                console.log('Page loaded');
+
+                var scale = 0.5;
+                var viewport = page.getViewport({ scale: scale });
+
+                // Prepare canvas using PDF page dimensions
+                var canvas = document.createElement('canvas');
+                var context = canvas.getContext('2d');
+                canvas.height = viewport.height;
+                canvas.width = viewport.width;
+
+                // Append canvas to the container
+                document.getElementById('pdf-container').appendChild(canvas);
+
+                // Render PDF page into canvas context
+                var renderContext = {
+                    canvasContext: context,
+                    viewport: viewport
+                };
+                var renderTask = page.render(renderContext);
+                renderTask.promise.then(function() {
+                    console.log('Page rendered');
+                });
+            });
+        }, function(reason) {
+            console.error(reason);
+        });
+    }
+</script>
+{% endblock %}

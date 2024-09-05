@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% load django_bootstrap5 %}
+
+{% block content %}
+<div class="container py-5">
+    <h2>Course Material for {{ course.name }}</h2>
+    <div class="d-flex justify-content-between mb-3">
+        {% if user == course.teacher %}
+            <a href="{% url 'add-course-material' course.id %}" class="btn btn-success me-2">
+                <i class="bi bi-plus-circle me-2"></i>Add Course Material
+            </a>
+        {% endif %}
+        <a href="{% url 'course-detail' course.id %}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left me-2"></i>Back to Course Detail
+        </a>
+    </div>
+    {% if course_material %}
+        <div class="list-group">
+            {% for material in course_material %}
+                <a href="{% url 'course-material-detail' material.id %}" class="list-group-item list-group-item-action">
+                    {{ material.title }} - {{ material.get_type_display }}
+                </a>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p class="text-muted">No course material available.</p>
+    {% endif %}
+</div>
+{% endblock %}
