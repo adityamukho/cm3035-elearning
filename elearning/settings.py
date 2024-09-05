@@ -40,7 +40,8 @@ INSTALLED_APPS = [
     'rules',
     'chat',
     'users.apps.UsersConfig',
-    'uniworld.apps.WebConfig',
+    'uniworld',
+    'uniworld.templatetags',
 ]
 
 MIDDLEWARE = [

@@ -6,12 +6,14 @@ from django.views.generic.detail import DetailView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.views.generic.list import ListView
 from rules.contrib.views import AutoPermissionRequiredMixin
+from django.urls import reverse_lazy
+from django.views.generic import DeleteView
 from django.views import View
 from django.core.paginator import Paginator
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from .models import Course, CourseMaterial, Lecture, Assignment, AssignmentSubmission
-from .forms import CourseMaterialForm, LectureForm, AssignmentForm
+from .models import Course, CourseMaterial, Lecture, Assignment, AssignmentSubmission, AssignmentQuestion
+from .forms import CourseMaterialForm, LectureForm, AssignmentForm, AssignmentQuestionForm, MCQOptionFormSet, AssignmentSubmissionForm, QuestionResponseFormSet, QuestionResponse
 
 from uniworld.models import Course, Feedback
 from chat.models import Room
@@ -388,17 +390,32 @@ class CourseMaterialDetailView(LoginRequiredMixin, DetailView):
             context['assignment'] = get_object_or_404(Assignment, material=material)
         return context
     
-class SubmitAssignmentView(LoginRequiredMixin, View):
-    def post(self, request, assignment_id):
-        assignment = get_object_or_404(Assignment, pk=assignment_id)
-        submission_text = request.POST.get('submission')
-        AssignmentSubmission.objects.create(
-            assignment=assignment,
-            student=request.user,
-            submission=submission_text
-        )
-        messages.success(request, "Your assignment has been submitted successfully!")
-        return redirect(reverse('course-material', kwargs={'course_id': assignment.material.course.id}))
+class SubmitAssignmentView(LoginRequiredMixin, CreateView):
+    model = AssignmentSubmission
+    form_class = AssignmentSubmissionForm
+    template_name = 'uniworld/submit_assignment.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        assignment = get_object_or_404(Assignment, pk=self.kwargs['assignment_id'])
+        context['assignment'] = assignment
+        if self.request.POST:
+            context['response_formset'] = QuestionResponseFormSet(self.request.POST)
+        else:
+            context['response_formset'] = QuestionResponseFormSet(queryset=QuestionResponse.objects.none())
+        return context
+
+    def form_valid(self, form):
+        context = self.get_context_data()
+        assignment = get_object_or_404(Assignment, pk=self.kwargs['assignment_id'])
+        form.instance.assignment = assignment
+        form.instance.student = self.request.user
+        self.object = form.save()
+        response_formset = context['response_formset']
+        if response_formset.is_valid():
+            response_formset.instance = self.object
+            response_formset.save()
+        return redirect('course-material', course_id=assignment.material.course.id)
 
 class EditCourseMaterialView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = CourseMaterial
@@ -421,18 +438,24 @@ class EditCourseMaterialView(LoginRequiredMixin, UserPassesTestMixin, UpdateView
         if material.type == 'lecture':
             context['lecture_form'] = LectureForm(instance=material.lecture)
         elif material.type == 'assignment':
-            context['assignment_form'] = AssignmentForm(instance=material.assignment)
+            assignment = get_object_or_404(Assignment, material=material)
+            context['assignment_form'] = AssignmentForm(instance=assignment)
+            context['questions'] = assignment.questions.all()
+            context['assignment_id'] = assignment.pk
         return context
 
     def form_valid(self, form):
         context = self.get_context_data()
+        material = self.get_object()
+        form.instance.type = material.type  # Ensure the type doesn't change
         material = form.save(commit=False)
         if material.type == 'lecture':
             lecture_form = LectureForm(self.request.POST, self.request.FILES, instance=material.lecture)
             if lecture_form.is_valid():
                 lecture_form.save()
         elif material.type == 'assignment':
-            assignment_form = AssignmentForm(self.request.POST, instance=material.assignment)
+            assignment = get_object_or_404(Assignment, material=material)
+            assignment_form = AssignmentForm(self.request.POST, instance=assignment)
             if assignment_form.is_valid():
                 assignment_form.save()
         material.save()
@@ -440,3 +463,53 @@ class EditCourseMaterialView(LoginRequiredMixin, UserPassesTestMixin, UpdateView
 
     def get_success_url(self):
         return reverse_lazy('course-material', kwargs={'course_id': self.object.course.id})
+
+class AddAssignmentQuestionView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
+    model = AssignmentQuestion
+    form_class = AssignmentQuestionForm
+    template_name = 'uniworld/add_assignment_question.html'
+
+    def test_func(self):
+        assignment = get_object_or_404(Assignment, pk=self.kwargs['assignment_id'])
+        return self.request.user == assignment.material.course.teacher
+
+    def form_valid(self, form):
+        assignment = get_object_or_404(Assignment, pk=self.kwargs['assignment_id'])
+        form.instance.assignment = assignment
+        self.object = form.save()
+        if form.instance.question_type == 'MCQ':
+            formset = MCQOptionFormSet(self.request.POST, instance=self.object)
+            if formset.is_valid():
+                formset.save()
+        return redirect('edit-course-material', pk=assignment.material.id)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        if self.request.POST:
+            context['mcq_formset'] = MCQOptionFormSet(self.request.POST)
+        else:
+            context['mcq_formset'] = MCQOptionFormSet()
+        return context
+
+class DeleteCourseMaterialView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+    model = CourseMaterial
+    template_name = 'uniworld/confirm_delete.html'
+
+    def get_success_url(self):
+        return reverse_lazy('course-material', kwargs={'course_id': self.object.course.id})
+
+    def test_func(self):
+        material = self.get_object()
+        return self.request.user == material.course.teacher
+
+class DeleteAssignmentQuestionView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+    model = AssignmentQuestion
+    template_name = 'uniworld/confirm_delete.html'
+
+    def get_success_url(self):
+        question = self.get_object()
+        return reverse_lazy('edit-course-material', kwargs={'pk': question.assignment.material.id})
+
+    def test_func(self):
+        question = self.get_object()
+        return self.request.user == question.assignment.material.course.teacher

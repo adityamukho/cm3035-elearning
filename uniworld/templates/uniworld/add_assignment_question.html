@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% load django_bootstrap5 %}
+
+{% block content %}
+<div class="container py-5">
+    <h2>Add Assignment Question</h2>
+    <form method="post">
+        {% csrf_token %}
+        {% bootstrap_form form %}
+        <div id="mcq-options" style="display: none;">
+            <h4>MCQ Options</h4>
+            {{ mcq_formset.management_form }}
+            {% for mcq_form in mcq_formset %}
+                <div class="mcq-option">
+                    {% bootstrap_form mcq_form %}
+                </div>
+            {% endfor %}
+        </div>
+        <button type="submit" class="btn btn-primary">Add Question</button>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        function toggleMCQOptions() {
+            if ($('#id_question_type').val() === 'MCQ') {
+                $('#mcq-options').show();
+            } else {
+                $('#mcq-options').hide();
+            }
+        }
+
+        $('#id_question_type').change(toggleMCQOptions);
+        toggleMCQOptions();
+    });
+</script>
+{% endblock %}

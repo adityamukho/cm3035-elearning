@@ -12,23 +12,41 @@
             <label class="form-label">Material Type</label>
             <input type="text" class="form-control" value="{{ form.instance.get_type_display }}" readonly>
         </div>
+        <input type="hidden" name="type" value="{{ form.instance.type }}">
         {% if lecture_form %}
             <h3>Lecture Details</h3>
             {% bootstrap_form lecture_form %}
         {% elif assignment_form %}
             <h3>Assignment Details</h3>
             {% bootstrap_form assignment_form %}
+            <h4>Questions</h4>
+            {% for question in questions %}
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <h5 class="card-title">Question {{ forloop.counter }}</h5>
+                        <p>{{ question.question_text }}</p>
+                        <p>Type: {{ question.get_question_type_display }}</p>
+                        <p>Marks: {{ question.marks }}</p>
+                        {% if question.question_type == 'MCQ' %}
+                            <h6>Options:</h6>
+                            <ul>
+                                {% for option in question.options.all %}
+                                    <li>{{ option.option_text }} {% if option.is_correct %}(Correct){% endif %}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                        <a href="{% url 'delete-assignment-question' question.id %}" class="btn btn-danger mt-3">Delete Question</a>
+                    </div>
+                </div>
+            {% endfor %}
+            {% if assignment_id %}
+                <a href="{% url 'add-assignment-question' assignment_id=assignment_id %}" class="btn btn-secondary mt-3">Add Question</a>
+            {% else %}
+                <p class="text-warning">Unable to add questions at this time. Please save the assignment first.</p>
+            {% endif %}
         {% endif %}
-        <button type="submit" class="btn btn-primary">Save Changes</button>
+        <button type="submit" class="btn btn-primary mt-3">Save Changes</button>
     </form>
+    <a href="{% url 'delete-course-material' pk=form.instance.id %}" class="btn btn-danger mt-3">Delete Course Material</a>
 </div>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-    $(document).ready(function() {
-        // Ensure the date input is set to 'date' type
-        $('input[name="due_date"]').attr('type', 'date');
-    });
-</script>
 {% endblock %}

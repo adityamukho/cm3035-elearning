@@ -81,11 +81,47 @@ class Lecture(models.Model):
 class Assignment(models.Model):
     material = models.OneToOneField(CourseMaterial, on_delete=models.CASCADE, primary_key=True)
     due_date = models.DateTimeField()
-    questions = models.TextField()  # JSON or other format to store questions
+
+    def __str__(self):
+        return f"Assignment for {self.material.title}"
+
+class AssignmentQuestion(models.Model):
+    QUESTION_TYPES = [
+        ('MCQ', 'Multiple Choice'),
+        ('ESSAY', 'Essay'),
+    ]
+
+    assignment = models.ForeignKey(Assignment, on_delete=models.CASCADE, related_name='questions')
+    question_text = models.TextField()
+    question_type = models.CharField(max_length=5, choices=QUESTION_TYPES)
+    marks = models.PositiveIntegerField()
+
+    def __str__(self):
+        return f"Question for {self.assignment.material.title}"
+
+class MCQOption(models.Model):
+    question = models.ForeignKey(AssignmentQuestion, on_delete=models.CASCADE, related_name='options')
+    option_text = models.CharField(max_length=255)
+    is_correct = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.option_text
 
 class AssignmentSubmission(models.Model):
     assignment = models.ForeignKey(Assignment, on_delete=models.CASCADE, related_name='submissions')
     student = models.ForeignKey(User, on_delete=models.CASCADE)
-    submission = models.TextField()  # JSON or other format to store answers
-    grade = models.FloatField(blank=True, null=True)
     submitted_at = models.DateTimeField(auto_now_add=True)
+    total_score = models.FloatField(null=True, blank=True)
+
+    def __str__(self):
+        return f"Submission by {self.student.username} for {self.assignment.material.title}"
+
+class QuestionResponse(models.Model):
+    submission = models.ForeignKey(AssignmentSubmission, on_delete=models.CASCADE, related_name='responses')
+    question = models.ForeignKey(AssignmentQuestion, on_delete=models.CASCADE)
+    response_text = models.TextField(blank=True, null=True)
+    selected_option = models.ForeignKey(MCQOption, on_delete=models.SET_NULL, null=True, blank=True)
+    score = models.FloatField(null=True, blank=True)
+
+    def __str__(self):
+        return f"Response to question {self.question.id} in {self.submission}"

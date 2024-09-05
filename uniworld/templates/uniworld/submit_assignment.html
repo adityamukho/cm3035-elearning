@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% load django_bootstrap5 %}
+
+{% block content %}
+<div class="container py-5">
+    <h2>Submit Assignment for {{ assignment.material.title }}</h2>
+    <form method="post">
+        {% csrf_token %}
+        {% bootstrap_form form %}
+        <h4>Questions</h4>
+        {{ response_formset.management_form }}
+        {% for form in response_formset %}
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Question {{ forloop.counter }}</h5>
+                    <p>{{ form.instance.question.question_text }}</p>
+                    {% if form.instance.question.question_type == 'MCQ' %}
+                        {% for option in form.instance.question.options.all %}
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="response_{{ forloop.parentloop.counter }}" id="option_{{ option.id }}" value="{{ option.id }}">
+                                <label class="form-check-label" for="option_{{ option.id }}">
+                                    {{ option.option_text }}
+                                </label>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        {% bootstrap_field form.response_text %}
+                    {% endif %}
+                </div>
+            </div>
+        {% endfor %}
+        <button type="submit" class="btn btn-primary">Submit Assignment</button>
+    </form>
+</div>
+{% endblock %}
