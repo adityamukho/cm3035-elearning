@@ -1,6 +1,19 @@
-from django.urls import path
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
 
 from .views import *
+
+router = DefaultRouter()
+router.register(r'courses', CourseViewSet)
+router.register(r'course-materials', CourseMaterialViewSet)
+router.register(r'lectures', LectureViewSet)
+router.register(r'assignments', AssignmentViewSet)
+router.register(r'assignment-questions', AssignmentQuestionViewSet)
+router.register(r'mcq-options', MCQOptionViewSet)
+router.register(r'assignment-submissions', AssignmentSubmissionViewSet)
+router.register(r'question-responses', QuestionResponseViewSet)
+router.register(r'feedbacks', FeedbackViewSet)
+
 
 urlpatterns = [
     path('heartbeat/', heartbeat, name="heartbeat"),
@@ -32,4 +45,5 @@ urlpatterns = [
     path('submission/<int:pk>/grade/', GradeSubmissionView.as_view(), name='grade-submission'),
     path('course/<int:course_id>/my-submissions/', MySubmissionsView.as_view(), name='my-submissions'),
     path('course/<int:course_id>/student/<int:student_id>/submissions/', StudentSubmissionsView.as_view(), name='student-submissions'),
+    path('api/', include(router.urls)),
 ]

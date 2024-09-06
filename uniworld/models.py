@@ -8,7 +8,6 @@ from mimetypes import guess_type
 is_course_author = Predicate(lambda user, course: course.teacher == user)
 not_blocked = Predicate(lambda user, course: user not in course.blocked_students.all())
 is_enrolled = Predicate(lambda user, course: user in course.students.all())
-is_enrolled_feedback = Predicate(lambda user, feedback: user in feedback.course.students.all())
 is_enrolled_material = Predicate(lambda user, material: user in material.course.students.all())
 is_course_author_material = Predicate(lambda user, material: user == material.course.teacher)
 is_course_author_question = Predicate(lambda user, question: user == question.assignment.material.course.teacher)
@@ -21,6 +20,9 @@ is_enrolled_response = Predicate(lambda user, response: user in response.submiss
 is_course_author_response = Predicate(lambda user, response: user == response.question.assignment.material.course.teacher)
 is_submission_author = Predicate(lambda user, submission: user == submission.student)
 is_response_author = Predicate(lambda user, response: user == response.submission.student)
+is_feedback_author = Predicate(lambda user, feedback: user == feedback.user)
+is_enrolled_assignment = Predicate(lambda user, assignment: user in assignment.material.course.students.all())
+is_course_author_assignment = Predicate(lambda user, assignment: user == assignment.material.course.teacher)
 
 class Course(RulesModel):
     class Meta:
@@ -29,6 +31,12 @@ class Course(RulesModel):
             'add': is_group_member('teachers'),
             'change': is_course_author,
             'delete': is_course_author,
+            'add_course_material': is_course_author,
+            'add_feedback': is_group_member('students') & is_enrolled,
+            'add_question': is_course_author,
+            'add_option': is_course_author,
+            'enroll_student': is_course_author,
+            'enroll_self': is_group_member('students') & ~is_enrolled,
         }
 
     name = models.CharField(max_length=200)
@@ -67,9 +75,8 @@ class Feedback(RulesModel):
     class Meta:
         rules_permissions = {
             'view': is_authenticated,
-            'add': is_enrolled_feedback,
-            'change': always_deny,
-            'delete': always_deny,
+            'change': is_feedback_author,
+            'delete': is_feedback_author,
         }
     
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='feedback')
@@ -84,11 +91,12 @@ class Feedback(RulesModel):
 class CourseMaterial(RulesModel):
     class Meta:
         rules_permissions = {
-            'view': is_enrolled_material,
-            'add': is_course_author_material,
+            'view': is_course_author_material | is_enrolled_material,
             'change': is_course_author_material,
             'delete': is_course_author_material,
         }
+
+        ordering = ['sequence']
 
     COURSE_MATERIAL_TYPES = [
         ('lecture', 'Lecture'),
@@ -99,9 +107,6 @@ class CourseMaterial(RulesModel):
     title = models.CharField(max_length=255)
     type = models.CharField(max_length=10, choices=COURSE_MATERIAL_TYPES)
     sequence = models.IntegerField()
-
-    class Meta:
-        ordering = ['sequence']
 
 class Lecture(models.Model):
     material = models.OneToOneField(CourseMaterial, on_delete=models.CASCADE, primary_key=True)
@@ -116,7 +121,13 @@ class Lecture(models.Model):
             self.document_mime_type = mime_type
         super().save(*args, **kwargs)
 
-class Assignment(models.Model):
+class Assignment(RulesModel):
+    class Meta:
+        rules_permissions = {
+            'add_submission': is_enrolled_assignment,
+            'add_question': is_course_author_assignment,
+        }
+
     material = models.OneToOneField(CourseMaterial, on_delete=models.CASCADE, primary_key=True)
     due_date = models.DateTimeField()
 
@@ -130,9 +141,10 @@ class AssignmentQuestion(RulesModel):
     class Meta:
         rules_permissions = {
             'view': is_course_author_question | is_enrolled_question,
-            'add': is_course_author_question,
             'change': is_course_author_question,
             'delete': is_course_author_question,
+            'add_option': is_course_author_question,
+            'add_response': is_enrolled_question,
         }
 
     QUESTION_TYPES = [
@@ -152,7 +164,6 @@ class MCQOption(RulesModel):
     class Meta:
         rules_permissions = {
             'view': is_course_author_mcq_option | is_enrolled_mcq_option,
-            'add': is_course_author_mcq_option,
             'change': is_course_author_mcq_option,
             'delete': is_course_author_mcq_option,
         }
@@ -168,8 +179,7 @@ class AssignmentSubmission(RulesModel):
     class Meta:
         rules_permissions = {
             'view': is_course_author_submission | is_submission_author,
-            'add': is_enrolled_submission,
-            'change': is_course_author_submission,
+            'change': is_course_author_submission, # Update score
             'delete': always_deny,
         }
 
@@ -199,8 +209,7 @@ class QuestionResponse(RulesModel):
     class Meta:
         rules_permissions = {
             'view': is_course_author_response | is_response_author,
-            'add': is_enrolled_response,
-            'change': is_course_author_response,
+            'change': is_course_author_response, # Update score
             'delete': always_deny,
         }
 

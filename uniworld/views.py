@@ -14,6 +14,8 @@ from django.views.generic.detail import DetailView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from rest_framework import viewsets
 from rules.contrib.views import AutoPermissionRequiredMixin
+from rules.contrib.rest_framework import AutoPermissionViewSetMixin
+from rest_framework.exceptions import PermissionDenied
 
 from chat.models import Room
 from uniworld.forms import CourseMaterialForm, LectureForm, AssignmentForm, AssignmentQuestionForm, MCQOptionFormSet
@@ -23,7 +25,9 @@ from uniworld.models import (
 )
 from uniworld.serializers import (
     CourseSerializer, CourseMaterialSerializer, LectureSerializer,
-    AssignmentSerializer, AssignmentQuestionSerializer
+    AssignmentSerializer, AssignmentQuestionSerializer,
+    AssignmentSubmissionSerializer, QuestionResponseSerializer,
+    MCQOptionSerializer, FeedbackSerializer
 )
 
 import re
@@ -634,22 +638,52 @@ class StudentSubmissionsView(LoginRequiredMixin, ListView):
         context['student'] = get_object_or_404(context['course'].students, id=self.kwargs['student_id'])
         return context
     
-class CourseViewSet(viewsets.ModelViewSet):
+class CourseViewSet(AutoPermissionViewSetMixin, viewsets.ModelViewSet):
     queryset = Course.objects.all()
     serializer_class = CourseSerializer
 
-class CourseMaterialViewSet(viewsets.ModelViewSet):
+class CourseMaterialViewSet(AutoPermissionViewSetMixin, viewsets.ModelViewSet):
     queryset = CourseMaterial.objects.all()
     serializer_class = CourseMaterialSerializer
+    permission_type_map = {
+        **AutoPermissionViewSetMixin.permission_type_map,
+        'create': None,
+    }
 
-class LectureViewSet(viewsets.ModelViewSet):
+    def create(self, request, *args, **kwargs):
+        course_id = request.data.get('course')
+        course = get_object_or_404(Course, id=course_id)
+
+        if not request.user.has_perm(Course.get_perm('add_course_material'), course):
+            raise PermissionDenied("You do not have permission to add course material to this course.")
+
+        return super().create(request, *args, **kwargs)
+
+class LectureViewSet(AutoPermissionViewSetMixin, viewsets.ModelViewSet):
     queryset = Lecture.objects.all()
     serializer_class = LectureSerializer
 
-class AssignmentViewSet(viewsets.ModelViewSet):
+class AssignmentViewSet(AutoPermissionViewSetMixin, viewsets.ModelViewSet):
     queryset = Assignment.objects.all()
     serializer_class = AssignmentSerializer
 
-class AssignmentQuestionViewSet(viewsets.ModelViewSet):
+class AssignmentQuestionViewSet(AutoPermissionViewSetMixin, viewsets.ModelViewSet):
     queryset = AssignmentQuestion.objects.all()
     serializer_class = AssignmentQuestionSerializer
+
+class AssignmentSubmissionViewSet(AutoPermissionViewSetMixin, viewsets.ModelViewSet):
+    queryset = AssignmentSubmission.objects.all()
+    serializer_class = AssignmentSubmissionSerializer
+
+class QuestionResponseViewSet(AutoPermissionViewSetMixin, viewsets.ModelViewSet):
+    queryset = QuestionResponse.objects.all()
+    serializer_class = QuestionResponseSerializer
+
+class MCQOptionViewSet(AutoPermissionViewSetMixin, viewsets.ModelViewSet):
+    queryset = MCQOption.objects.all()
+    serializer_class = MCQOptionSerializer
+
+class FeedbackViewSet(AutoPermissionViewSetMixin, viewsets.ModelViewSet):
+    queryset = Feedback.objects.all()
+    serializer_class = FeedbackSerializer
+
