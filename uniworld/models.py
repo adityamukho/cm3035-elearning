@@ -82,6 +82,9 @@ class Assignment(models.Model):
     material = models.OneToOneField(CourseMaterial, on_delete=models.CASCADE, primary_key=True)
     due_date = models.DateTimeField()
 
+    def total_marks(self):
+        return self.questions.aggregate(total=models.Sum('marks'))['total'] or 0
+
     def __str__(self):
         return f"Assignment for {self.material.title}"
 
@@ -113,6 +116,19 @@ class AssignmentSubmission(models.Model):
     submitted_at = models.DateTimeField(auto_now_add=True)
     total_score = models.FloatField(null=True, blank=True)
     feedback = models.TextField(null=True, blank=True)
+
+    def calculate_total_score(self):
+        total_score = 0
+        responses = self.responses.all()
+        for response in responses:
+            if response.question.question_type == 'MCQ':
+                if response.selected_option and response.selected_option.is_correct:
+                    total_score += response.question.marks
+            elif response.question.question_type == 'ESSAY':
+                if response.score is not None:
+                    total_score += response.score
+        self.total_score = total_score
+        self.save()
 
     def __str__(self):
         return f"Submission by {self.student.username} for {self.assignment.material.title}"

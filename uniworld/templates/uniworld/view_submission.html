@@ -24,40 +24,55 @@
         </div>
     {% endif %}
 
-    <h4 class="mt-4">Responses</h4>
-    {% for response in responses %}
-        <div class="card mb-3">
-            <div class="card-body">
-                <h5 class="card-title">
-                    Question {{ forloop.counter }}
-                    <span class="float-end badge bg-primary">{{ response.question.marks }} mark{{ response.question.marks|pluralize }}</span>
-                </h5>
-                <p><strong>Question:</strong> {{ response.question.question_text }}</p>
+    {% if is_teacher %}
+        <form method="post" action="{% url 'grade-submission' submission.id %}">
+            {% csrf_token %}
+            {% for response in responses %}
+                <div class="mb-3">
+                    <h5>{{ response.question.question_text }}</h5>
+                    {% if response.question.question_type == 'MCQ' %}
+                        <p><strong>Selected Option:</strong> {{ response.selected_option.option_text }}</p>
+                        <p><strong>Correct:</strong> {{ response.selected_option.is_correct }}</p>
+                    {% elif response.question.question_type == 'ESSAY' %}
+                        <p><strong>Response:</strong></p>
+                        <div class="border p-3 bg-light">
+                            {{ response.response_text|linebreaks }}
+                        </div>
+                        <div class="mt-2">
+                            <label for="score_{{ response.id }}" class="form-label">Score</label>
+                            <input type="number" class="form-control" id="score_{{ response.id }}" name="score_{{ response.id }}" min="0" max="{{ response.question.marks }}" value="{{ response.score|default_if_none:'' }}" required>
+                        </div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+            <div class="mb-3">
+                <label for="feedback" class="form-label">Feedback</label>
+                <textarea class="form-control" id="feedback" name="feedback" rows="3">{{ submission.feedback|default_if_none:'' }}</textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">{% if submission.total_score is not None %}Update Grade{% else %}Submit Grade{% endif %}</button>
+        </form>
+    {% else %}
+        {% for response in responses %}
+            <div class="mb-3">
+                <h5>{{ response.question.question_text }}</h5>
                 {% if response.question.question_type == 'MCQ' %}
                     <p><strong>Selected Option:</strong> {{ response.selected_option.option_text }}</p>
-                    <p><strong>Correct:</strong> {% if response.selected_option.is_correct %}Yes{% else %}No{% endif %}</p>
+                    <p><strong>Correct:</strong> {{ response.selected_option.is_correct }}</p>
                 {% elif response.question.question_type == 'ESSAY' %}
-                    <p><strong>Answer:</strong></p>
+                    <p><strong>Response:</strong></p>
                     <div class="border p-3 bg-light">
                         {{ response.response_text|linebreaks }}
                     </div>
+                    <div class="mt-2">
+                        <p><strong>Score:</strong> {{ response.score }}</p>
+                    </div>
                 {% endif %}
             </div>
-        </div>
-    {% endfor %}
-
-    <form method="post" action="{% url 'grade-submission' submission.id %}">
-        {% csrf_token %}
+        {% endfor %}
         <div class="mb-3">
-            <label for="total_score" class="form-label">Total Score</label>
-            <input type="number" class="form-control" id="total_score" name="total_score" min="0" max="{{ submission.assignment.total_marks }}" value="{{ submission.total_score|default_if_none:'' }}" required>
+            <p><strong>Feedback:</strong> {{ submission.feedback|default_if_none:'No feedback provided.' }}</p>
         </div>
-        <div class="mb-3">
-            <label for="feedback" class="form-label">Feedback</label>
-            <textarea class="form-control" id="feedback" name="feedback" rows="3">{{ submission.feedback|default_if_none:'' }}</textarea>
-        </div>
-        <button type="submit" class="btn btn-primary">{% if submission.total_score is not None %}Update Grade{% else %}Submit Grade{% endif %}</button>
-    </form>
+    {% endif %}
 
     <a href="{% url 'course-submissions' submission.assignment.material.course.id %}" class="btn btn-secondary mt-3">Back to Submissions</a>
 </div>

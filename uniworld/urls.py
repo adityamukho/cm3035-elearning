@@ -30,4 +30,5 @@ urlpatterns = [
     path('course/<int:course_id>/submissions/', CourseSubmissionsView.as_view(), name='course-submissions'),
     path('submission/<int:pk>/', ViewSubmissionView.as_view(), name='view-submission'),
     path('submission/<int:pk>/grade/', GradeSubmissionView.as_view(), name='grade-submission'),
+    path('course/<int:course_id>/my-submissions/', MySubmissionsView.as_view(), name='my-submissions'),
 ]

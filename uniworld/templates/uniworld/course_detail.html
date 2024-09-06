@@ -79,6 +79,12 @@
                                             <i class="bi bi-file-earmark-text-fill me-2"></i>Submissions
                                         </a>
                                     </div>
+                                {% elif user in course.students.all %}
+                                    <div class="col">
+                                        <a href="{% url 'my-submissions' course.id %}" class="btn btn-secondary mb-4 w-100">
+                                            <i class="bi bi-file-earmark-text-fill me-2"></i>My Submissions
+                                        </a>
+                                    </div>
                                 {% endif %}
                             {% endif %}
                             {% if course.chat_room %}

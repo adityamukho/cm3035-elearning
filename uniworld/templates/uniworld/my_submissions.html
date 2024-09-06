@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% load django_bootstrap5 %}
+
+{% block content %}
+<div class="container py-5">
+    <h2>My Submissions for {{ course.name }}</h2>
+    {% if submissions %}
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Assignment</th>
+                    <th>Submitted At</th>
+                    <th>Status</th>
+                    <th>Score</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for submission in submissions %}
+                    <tr>
+                        <td>{{ submission.assignment.material.title }}</td>
+                        <td>{{ submission.submitted_at }}</td>
+                        <td>
+                            {% if submission.total_score is not None %}
+                                <span class="badge bg-success">Graded</span>
+                            {% else %}
+                                <span class="badge bg-warning text-dark">Pending</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if submission.total_score is not None %}
+                                {{ submission.total_score }} / {{ submission.assignment.total_marks }}
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'view-submission' submission.id %}" class="btn btn-sm btn-primary">View</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No submissions yet.</p>
+    {% endif %}
+    <a href="{% url 'course-detail' course.id %}" class="btn btn-secondary mt-3">Back to Course</a>
+</div>
+{% endblock %}

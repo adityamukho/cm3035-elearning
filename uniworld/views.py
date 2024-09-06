@@ -165,10 +165,23 @@ class BlockStudentView(LoginRequiredMixin, View):
         if request.user != course.teacher:
             return HttpResponseForbidden("You don't have permission to block students from this course.")
         
-        student = get_object_or_404(get_user_model(), pk=student_id)
-        course.students.remove(student)
-        course.blocked_students.add(student)
-        messages.success(request, f"{student.first_name} {student.last_name} has been blocked from the course.")
+        try:
+            student = get_user_model().objects.get(pk=student_id)
+            
+            # If the student is enrolled, unenroll them first
+            if student in course.students.all():
+                course.students.remove(student)
+                messages.info(request, f"{student.first_name} {student.last_name} has been unenrolled from the course.")
+            
+            # Block the student
+            if student not in course.blocked_students.all():
+                course.blocked_students.add(student)
+                messages.success(request, f"{student.first_name} {student.last_name} has been blocked from the course.")
+            else:
+                messages.info(request, f"{student.first_name} {student.last_name} is already blocked from this course.")
+        
+        except get_user_model().DoesNotExist:
+            messages.error(request, f"No user found with ID {student_id}.")
         
         return redirect('course-detail', pk=course_id)
 
@@ -540,20 +553,22 @@ class CourseSubmissionsView(LoginRequiredMixin, UserPassesTestMixin, ListView):
         context['course'] = Course.objects.get(pk=self.kwargs['course_id'])
         return context
     
-class ViewSubmissionView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
-    model = AssignmentSubmission
-    template_name = 'uniworld/view_submission.html'
-    context_object_name = 'submission'
-
-    def test_func(self):
-        submission = self.get_object()
-        return self.request.user == submission.assignment.material.course.teacher
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        submission = self.get_object()
-        context['responses'] = QuestionResponse.objects.filter(submission=submission).order_by('question__id')
-        return context
+class ViewSubmissionView(LoginRequiredMixin, View):
+    def get(self, request, pk):
+        submission = get_object_or_404(AssignmentSubmission, pk=pk)
+        
+        # Check if the user is the student who made the submission or the teacher of the course
+        if request.user != submission.student and request.user != submission.assignment.material.course.teacher:
+            return HttpResponseForbidden("You don't have permission to view this submission.")
+        
+        responses = submission.responses.all()
+        is_teacher = request.user == submission.assignment.material.course.teacher
+        context = {
+            'submission': submission,
+            'responses': responses,
+            'is_teacher': is_teacher,
+        }
+        return render(request, 'uniworld/view_submission.html', context)
 
 class GradeSubmissionView(LoginRequiredMixin, UserPassesTestMixin, View):
     def test_func(self):
@@ -562,18 +577,34 @@ class GradeSubmissionView(LoginRequiredMixin, UserPassesTestMixin, View):
 
     def post(self, request, pk):
         submission = get_object_or_404(AssignmentSubmission, pk=pk)
-        total_score = request.POST.get('total_score')
         feedback = request.POST.get('feedback')
 
-        is_new_grade = submission.total_score is None
-        submission.total_score = total_score
+        # Update scores for essay questions
+        for response in submission.responses.filter(question__question_type='ESSAY'):
+            score = request.POST.get(f'score_{response.id}')
+            if score is not None:
+                response.score = float(score)
+                response.save()
+
+        # Calculate total score
+        submission.calculate_total_score()
         submission.feedback = feedback
         submission.save()
 
-        if is_new_grade:
-            messages.success(request, 'Submission graded successfully. The student will be notified.')
-        else:
-            messages.success(request, 'Grade updated successfully.')
-        
+        messages.success(request, 'Submission graded successfully. The student will be notified.')
         return redirect('view-submission', pk=submission.pk)
+
+class MySubmissionsView(LoginRequiredMixin, ListView):
+    model = AssignmentSubmission
+    template_name = 'uniworld/my_submissions.html'
+    context_object_name = 'submissions'
+
+    def get_queryset(self):
+        course = get_object_or_404(Course, pk=self.kwargs['course_id'])
+        return AssignmentSubmission.objects.filter(assignment__material__course=course, student=self.request.user).order_by('-submitted_at')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['course'] = get_object_or_404(Course, pk=self.kwargs['course_id'])
+        return context
     
