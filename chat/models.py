@@ -1,6 +1,6 @@
 from django.db import models
 from django.conf import settings
-from rules import is_group_member, always_deny, is_authenticated
+from rules import always_deny, is_authenticated
 from rules.contrib.models import RulesModel
 
 User = settings.AUTH_USER_MODEL
@@ -9,7 +9,7 @@ class Room(RulesModel):
     class Meta:
         rules_permissions = {
             'view': is_authenticated,
-            'add': is_group_member('teachers'),
+            'add': always_deny,
             'change': always_deny,
             'delete': always_deny,
         }

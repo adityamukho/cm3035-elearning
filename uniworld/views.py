@@ -1,27 +1,32 @@
 from django.contrib import messages
+from django.contrib.auth import get_user_model
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.contrib.auth.models import Group
+from django.core.paginator import Paginator
+from django.db.models import Q
 from django.http import HttpResponse, HttpResponseForbidden, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse_lazy, reverse
+from django.utils import timezone
+from django.views import View
+from django.views.generic import ListView
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
-from django.views.generic.list import ListView
+from rest_framework import viewsets
 from rules.contrib.views import AutoPermissionRequiredMixin
-from django.views import View
-from django.core.paginator import Paginator
-from django.contrib.auth.decorators import login_required
-from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from .models import Course, CourseMaterial, Lecture, Assignment, AssignmentSubmission, AssignmentQuestion, QuestionResponse, MCQOption
-from .forms import CourseMaterialForm, LectureForm, AssignmentForm, AssignmentQuestionForm, MCQOptionFormSet, AssignmentSubmissionForm, QuestionResponseFormSet
-from uniworld.models import Course, Feedback
+
 from chat.models import Room
-from django.contrib.auth import get_user_model
-from django.db.models import Q
-from django.contrib.auth.models import Group
-from django.utils import timezone
+from uniworld.forms import CourseMaterialForm, LectureForm, AssignmentForm, AssignmentQuestionForm, MCQOptionFormSet
+from uniworld.models import (
+    Course, CourseMaterial, Lecture, Assignment, AssignmentSubmission,
+    AssignmentQuestion, QuestionResponse, MCQOption, Feedback
+)
+from uniworld.serializers import (
+    CourseSerializer, CourseMaterialSerializer, LectureSerializer,
+    AssignmentSerializer, AssignmentQuestionSerializer
+)
+
 import re
-from django.shortcuts import get_object_or_404
-from django.views.generic import ListView
-from .models import Course, AssignmentSubmission
 
 def heartbeat(request):
     return HttpResponse("alive")
@@ -635,3 +640,22 @@ class StudentSubmissionsView(LoginRequiredMixin, ListView):
         context['student'] = get_object_or_404(context['course'].students, id=self.kwargs['student_id'])
         return context
     
+class CourseViewSet(viewsets.ModelViewSet):
+    queryset = Course.objects.all()
+    serializer_class = CourseSerializer
+
+class CourseMaterialViewSet(viewsets.ModelViewSet):
+    queryset = CourseMaterial.objects.all()
+    serializer_class = CourseMaterialSerializer
+
+class LectureViewSet(viewsets.ModelViewSet):
+    queryset = Lecture.objects.all()
+    serializer_class = LectureSerializer
+
+class AssignmentViewSet(viewsets.ModelViewSet):
+    queryset = Assignment.objects.all()
+    serializer_class = AssignmentSerializer
+
+class AssignmentQuestionViewSet(viewsets.ModelViewSet):
+    queryset = AssignmentQuestion.objects.all()
+    serializer_class = AssignmentQuestionSerializer

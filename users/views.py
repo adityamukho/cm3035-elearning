@@ -10,9 +10,15 @@ from django.views import View
 from django.views.generic.edit import FormView
 
 from .forms import RegisterForm, UserUpdateForm, ProfileUpdateForm
+from .permissions import IsOwnerOrReadOnly
 
 from django.utils import timezone
 from uniworld.models import Assignment
+from rest_framework import viewsets
+from django.contrib.auth import get_user_model
+from .serializers import UserSerializer, ProfileSerializer
+from rules.contrib.rest_framework import AutoPermissionViewSetMixin
+from .models import Profile
 
 class RegisterView(FormView):
     template_name = 'users/register.html'
@@ -94,3 +100,12 @@ class UserLoginView(LoginView):
         context['users'] = users
 
         return context
+
+class UserViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = [IsOwnerOrReadOnly]
+
+class ProfileViewSet(AutoPermissionViewSetMixin, viewsets.ModelViewSet):
+    queryset = Profile.objects.all()
+    serializer_class = ProfileSerializer

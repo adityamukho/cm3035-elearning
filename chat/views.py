@@ -3,7 +3,9 @@ from django.views.generic.list import ListView
 from django.contrib.auth.models import User
 
 from chat.models import Room, Message
-
+from rest_framework import viewsets
+from .serializers import RoomSerializer, MessageSerializer
+from rules.contrib.rest_framework import AutoPermissionViewSetMixin
 
 class RoomListView(ListView):
     model = Room
@@ -23,3 +25,11 @@ class RoomDetailView(DetailView):
         context['room'] = room
         context['users'] = users
         return context
+
+class RoomViewSet(AutoPermissionViewSetMixin, viewsets.ModelViewSet):
+    queryset = Room.objects.all()
+    serializer_class = RoomSerializer
+
+class MessageViewSet(AutoPermissionViewSetMixin, viewsets.ModelViewSet):
+    queryset = Message.objects.all()
+    serializer_class = MessageSerializer

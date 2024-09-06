@@ -6,8 +6,13 @@ from django.contrib.auth.views import (
     PasswordResetCompleteView
 )
 from django.urls import path
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
 
-from .views import RegisterView, ProfileView, UserLoginView
+from .views import *
+
+router = DefaultRouter()
+router.register(r'users', UserViewSet)
 
 urlpatterns = [
     path('login/', UserLoginView.as_view(redirect_authenticated_user=True, template_name='users/login.html'), name='login'),
@@ -25,4 +30,5 @@ urlpatterns = [
          PasswordResetCompleteView.as_view(template_name='users/password_reset_complete.html'),
          name='password_reset_complete'),
     path('profile/<int:pk>/', ProfileView.as_view(), name='profile'),
+    path('api/', include(router.urls)),
 ]
