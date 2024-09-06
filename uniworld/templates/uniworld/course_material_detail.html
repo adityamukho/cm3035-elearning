@@ -25,7 +25,14 @@
             {% if lecture.document %}
                 <div class="document-container">
                     <h4>Lecture Document</h4>
-                    <div id="pdf-container" style="width: 100%; max-height: 600px;"></div>
+                    {% if is_image %}
+                        <img src="{{ lecture.document.url }}" alt="Lecture Document" style="max-height: 300px;">
+                    {% elif is_pdf %}
+                        <div id="pdf-container" style="width: 100%; max-height: 600px;"></div>
+                    {% else %}
+                        <p>No preview available.</p>
+                    {% endif %}
+                    <br/>
                     <a href="{{ lecture.document.url }}" class="btn btn-primary mt-3" download>Download Document</a>
                 </div>
             {% endif %}

@@ -74,6 +74,10 @@
         </div>
     {% endif %}
 
-    <a href="{% url 'course-submissions' submission.assignment.material.course.id %}" class="btn btn-secondary mt-3">Back to Submissions</a>
+    {% if is_teacher %}
+        <a href="{% url 'course-submissions' submission.assignment.material.course.id %}" class="btn btn-secondary mt-3">Back to Submissions</a>
+    {% elif is_student %}
+        <a href="{% url 'my-submissions' submission.assignment.material.course.id %}" class="btn btn-secondary mt-3">Back to My Submissions</a>
+    {% endif %}
 </div>
 {% endblock %}

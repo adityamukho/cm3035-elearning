@@ -3,6 +3,7 @@ from django.db import models
 from rules import Predicate, is_group_member
 from rules.contrib.models import RulesModel
 from chat.models import Room
+from mimetypes import guess_type
 
 is_course_author = Predicate(lambda user, course: course.teacher == user)
 
@@ -76,7 +77,14 @@ class Lecture(models.Model):
     material = models.OneToOneField(CourseMaterial, on_delete=models.CASCADE, primary_key=True)
     content = models.TextField()
     video_url = models.URLField(blank=True, null=True)
-    document = models.FileField(upload_to='lectures/', blank=True, null=True)
+    document = models.FileField(upload_to='lectures/', null=True, blank=True)
+    document_mime_type = models.CharField(max_length=50, null=True, blank=True)
+
+    def save(self, *args, **kwargs):
+        if self.document:
+            mime_type, _ = guess_type(self.document.url)
+            self.document_mime_type = mime_type
+        super().save(*args, **kwargs)
 
 class Assignment(models.Model):
     material = models.OneToOneField(CourseMaterial, on_delete=models.CASCADE, primary_key=True)

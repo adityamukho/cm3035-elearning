@@ -396,7 +396,10 @@ class CourseMaterialDetailView(LoginRequiredMixin, DetailView):
         context = super().get_context_data(**kwargs)
         material = self.get_object()
         if material.type == 'lecture':
-            context['lecture'] = get_object_or_404(Lecture, material=material)
+            lecture = get_object_or_404(Lecture, material=material)
+            context['lecture'] = lecture
+            context['is_image'] = lecture.document_mime_type and lecture.document_mime_type.startswith("image/")
+            context['is_pdf'] = lecture.document_mime_type and lecture.document_mime_type.startswith("application/pdf")
         elif material.type == 'assignment':
             context['assignment'] = get_object_or_404(Assignment, material=material)
         return context
@@ -563,10 +566,12 @@ class ViewSubmissionView(LoginRequiredMixin, View):
         
         responses = submission.responses.all()
         is_teacher = request.user == submission.assignment.material.course.teacher
+        is_student = request.user == submission.student
         context = {
             'submission': submission,
             'responses': responses,
             'is_teacher': is_teacher,
+            'is_student': is_student,
         }
         return render(request, 'uniworld/view_submission.html', context)
 
