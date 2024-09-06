@@ -73,6 +73,13 @@
                                         <i class="bi bi-book-fill me-2"></i>View Course Material
                                     </a>
                                 </div>
+                                {% if user == course.teacher %}
+                                    <div class="col">
+                                        <a href="{% url 'course-submissions' course.id %}" class="btn btn-secondary mb-4 w-100">
+                                            <i class="bi bi-file-earmark-text-fill me-2"></i>View Submissions
+                                        </a>
+                                    </div>
+                                {% endif %}
                             {% endif %}
                             {% if course.chat_room %}
                                 <div class="col">

@@ -4,6 +4,8 @@
 {% block content %}
 <div class="container py-5">
     <h2>{{ material.title }}</h2>
+    <h4>Course: {{ material.course.name }}</h4>
+    <p>Instructor: <a href="{% url 'profile' material.course.teacher.id %}">{{ material.course.teacher.get_full_name }}</a></p>
     {% if user == material.course.teacher %}
         <a href="{% url 'edit-course-material' material.id %}" class="btn btn-primary mb-3">
             <i class="bi bi-pencil-square me-2"></i>Edit Material
@@ -32,15 +34,47 @@
         <div class="assignment-content">
             <h3>Assignment</h3>
             {% if assignment %}
-                <p>{{ assignment.questions }}</p>
                 <h4>Submit Your Assignment</h4>
-                <form method="post" action="{% url 'submit-assignment' assignment.pk %}">
+                <form id="assignmentForm" method="post" action="{% url 'submit-assignment' assignment.pk %}">
                     {% csrf_token %}
-                    <div class="mb-3">
-                        <label for="submission" class="form-label">Your Submission</label>
-                        <textarea class="form-control" id="submission" name="submission" rows="5" required></textarea>
-                    </div>
-                    <button type="submit" class="btn btn-primary">Submit</button>
+                    {% for question in assignment.questions.all %}
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <h5 class="card-title">
+                                    Question {{ forloop.counter }}
+                                    <span class="float-end badge bg-primary">{{ question.marks }} mark{{ question.marks|pluralize }}</span>
+                                </h5>
+                                <p>{{ question.question_text }}</p>
+                                {% if question.question_type == 'MCQ' %}
+                                    {% for option in question.options.all %}
+                                        <div class="form-check">
+                                            <input class="form-check-input question-input" type="radio" 
+                                                   name="question_{{ question.id }}" 
+                                                   id="option_{{ option.id }}" 
+                                                   value="{{ option.id }}" required>
+                                            <label class="form-check-label" for="option_{{ option.id }}">
+                                                {{ option.option_text }}
+                                            </label>
+                                        </div>
+                                    {% endfor %}
+                                {% elif question.question_type == 'ESSAY' %}
+                                    <div class="mb-3">
+                                        <label for="essay_{{ question.id }}" class="form-label">Your Answer</label>
+                                        <textarea class="form-control question-input" 
+                                                  id="essay_{{ question.id }}" 
+                                                  name="question_{{ question.id }}" 
+                                                  rows="5" required></textarea>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                    {% if assignment.questions.all %}
+                        <button id="submitButton" type="submit" class="btn btn-primary" disabled>Submit Assignment</button>
+                        <p id="validationMessage" class="text-danger mt-2" style="display: none;">Please answer all questions before submitting.</p>
+                    {% else %}
+                        <p class="alert alert-info">There are no questions in this assignment yet.</p>
+                    {% endif %}
                 </form>
             {% else %}
                 <p>Assignment details are not available.</p>
@@ -100,5 +134,52 @@
             console.error(reason);
         });
     }
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('assignmentForm');
+    const submitButton = document.getElementById('submitButton');
+    const validationMessage = document.getElementById('validationMessage');
+    const inputs = form.querySelectorAll('.question-input');
+
+    function validateForm() {
+        let allAnswered = true;
+        inputs.forEach(input => {
+            if (input.type === 'radio') {
+                const name = input.getAttribute('name');
+                if (!form.querySelector(`input[name="${name}"]:checked`)) {
+                    allAnswered = false;
+                }
+            } else if (input.type === 'textarea') {
+                if (!input.value.trim()) {
+                    allAnswered = false;
+                }
+            }
+        });
+
+        submitButton.disabled = !allAnswered;
+        validationMessage.style.display = allAnswered ? 'none' : 'block';
+    }
+
+    inputs.forEach(input => {
+        input.addEventListener('change', validateForm);
+        if (input.type === 'textarea') {
+            input.addEventListener('input', validateForm);
+        }
+    });
+
+    form.addEventListener('submit', function(event) {
+        if (!submitButton.disabled) {
+            return true;
+        }
+        event.preventDefault();
+        validationMessage.style.display = 'block';
+        return false;
+    });
+
+    // Initial validation
+    validateForm();
+});
 </script>
 {% endblock %}

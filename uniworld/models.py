@@ -112,6 +112,7 @@ class AssignmentSubmission(models.Model):
     student = models.ForeignKey(User, on_delete=models.CASCADE)
     submitted_at = models.DateTimeField(auto_now_add=True)
     total_score = models.FloatField(null=True, blank=True)
+    feedback = models.TextField(null=True, blank=True)
 
     def __str__(self):
         return f"Submission by {self.student.username} for {self.assignment.material.title}"

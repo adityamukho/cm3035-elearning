@@ -27,4 +27,7 @@ urlpatterns = [
     path('assignment/<int:assignment_id>/add-question/', AddAssignmentQuestionView.as_view(), name='add-assignment-question'),
     path('course-material/<int:pk>/delete/', DeleteCourseMaterialView.as_view(), name='delete-course-material'),
     path('assignment-question/<int:pk>/delete/', DeleteAssignmentQuestionView.as_view(), name='delete-assignment-question'),
+    path('course/<int:course_id>/submissions/', CourseSubmissionsView.as_view(), name='course-submissions'),
+    path('submission/<int:pk>/', ViewSubmissionView.as_view(), name='view-submission'),
+    path('submission/<int:pk>/grade/', GradeSubmissionView.as_view(), name='grade-submission'),
 ]

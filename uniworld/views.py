@@ -6,16 +6,12 @@ from django.views.generic.detail import DetailView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.views.generic.list import ListView
 from rules.contrib.views import AutoPermissionRequiredMixin
-from django.urls import reverse_lazy
-from django.views.generic import DeleteView
 from django.views import View
 from django.core.paginator import Paginator
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from .models import Course, CourseMaterial, Lecture, Assignment, AssignmentSubmission, AssignmentQuestion
-from .forms import CourseMaterialForm, LectureForm, AssignmentForm, AssignmentQuestionForm, MCQOptionFormSet, AssignmentSubmissionForm, QuestionResponseFormSet, QuestionResponse
-from .tasks import notify_teacher_of_enrollment, notify_teacher_of_unenrollment, notify_student_of_addition, notify_student_of_removal, notify_students_of_new_material, notify_students_of_updated_material, notify_teacher_of_assignment_submission
-
+from .models import Course, CourseMaterial, Lecture, Assignment, AssignmentSubmission, AssignmentQuestion, QuestionResponse, MCQOption
+from .forms import CourseMaterialForm, LectureForm, AssignmentForm, AssignmentQuestionForm, MCQOptionFormSet, AssignmentSubmissionForm, QuestionResponseFormSet
 from uniworld.models import Course, Feedback
 from chat.models import Room
 from django.contrib.auth import get_user_model
@@ -147,7 +143,6 @@ class CourseLeaveView(View):
         if request.user.is_authenticated and request.user in course.students.all():
             course.students.remove(request.user)
             messages.success(request, f"You have successfully left the course '{course.name}'.")
-            notify_teacher_of_unenrollment.delay(course.id, request.user.id)  # Call the task here
         return redirect('course-detail', pk=pk)
 
 
@@ -160,7 +155,6 @@ class RemoveStudentView(LoginRequiredMixin, View):
         student = get_object_or_404(course.students, pk=student_id)
         course.students.remove(student)
         messages.success(request, f"{student.first_name} {student.last_name} has been removed from the course.")
-        notify_student_of_removal.delay(course.id, student.id)
         
         return redirect('course-detail', pk=course_id)
 
@@ -194,7 +188,6 @@ class AddStudentsView(LoginRequiredMixin, View):
                 student = get_user_model().objects.get(email=email)
                 if student not in course.students.all() and student not in course.blocked_students.all():
                     course.students.add(student)
-                    notify_student_of_addition.delay(course.id, student.id)
                     added_count += 1
             except get_user_model().DoesNotExist:
                 pass
@@ -235,7 +228,6 @@ class CourseEnrollView(View):
         if user not in course.students.all():
             course.students.add(user)
             messages.success(request, "You have successfully enrolled in the course.")
-            notify_teacher_of_enrollment.delay(course.id, user.id)  # Call the task here
         else:
             messages.info(request, "You are already enrolled in this course.")
 
@@ -371,7 +363,6 @@ class AddCourseMaterialView(LoginRequiredMixin, View):
                     assignment.material = material
                     assignment.save()
             
-            notify_students_of_new_material.delay(course.id, material.id)
             return redirect('course-material', course_id=course_id)
         
         lecture_form = LectureForm()
@@ -397,32 +388,30 @@ class CourseMaterialDetailView(LoginRequiredMixin, DetailView):
             context['assignment'] = get_object_or_404(Assignment, material=material)
         return context
     
-class SubmitAssignmentView(LoginRequiredMixin, CreateView):
-    model = AssignmentSubmission
-    form_class = AssignmentSubmissionForm
-    template_name = 'uniworld/submit_assignment.html'
+class SubmitAssignmentView(LoginRequiredMixin, View):
+    def post(self, request, assignment_id):
+        assignment = get_object_or_404(Assignment, pk=assignment_id)
+        submission = AssignmentSubmission.objects.create(
+            assignment=assignment,
+            student=request.user
+        )
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        assignment = get_object_or_404(Assignment, pk=self.kwargs['assignment_id'])
-        context['assignment'] = assignment
-        if self.request.POST:
-            context['response_formset'] = QuestionResponseFormSet(self.request.POST)
-        else:
-            context['response_formset'] = QuestionResponseFormSet(queryset=QuestionResponse.objects.none())
-        return context
+        for question in assignment.questions.all():
+            answer = request.POST.get(f'question_{question.id}')
+            if question.question_type == 'MCQ':
+                selected_option = get_object_or_404(MCQOption, pk=answer)
+                QuestionResponse.objects.create(
+                    submission=submission,
+                    question=question,
+                    selected_option=selected_option
+                )
+            elif question.question_type == 'ESSAY':
+                QuestionResponse.objects.create(
+                    submission=submission,
+                    question=question,
+                    response_text=answer
+                )
 
-    def form_valid(self, form):
-        context = self.get_context_data()
-        assignment = get_object_or_404(Assignment, pk=self.kwargs['assignment_id'])
-        form.instance.assignment = assignment
-        form.instance.student = self.request.user
-        self.object = form.save()
-        response_formset = context['response_formset']
-        if response_formset.is_valid():
-            response_formset.instance = self.object
-            submission = response_formset.save()
-            notify_teacher_of_assignment_submission.delay(assignment.course.id, self.request.user.id, submission.id)
         return redirect('course-material', course_id=assignment.material.course.id)
 
 class EditCourseMaterialView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
@@ -471,7 +460,6 @@ class EditCourseMaterialView(LoginRequiredMixin, UserPassesTestMixin, UpdateView
                     assignment.due_date = timezone.make_aware(assignment.due_date)
                 assignment.save()
         material.save()
-        notify_students_of_updated_material.delay(material.course.id, material.id)
         return super().form_valid(form)
 
     def get_success_url(self):
@@ -494,7 +482,6 @@ class AddAssignmentQuestionView(LoginRequiredMixin, UserPassesTestMixin, CreateV
             formset = MCQOptionFormSet(self.request.POST, instance=self.object)
             if formset.is_valid():
                 formset.save()
-        notify_students_of_updated_material.delay(assignment.material.course.id, assignment.material.id)
         return redirect('edit-course-material', pk=assignment.material.id)
 
     def get_context_data(self, **kwargs):
@@ -533,5 +520,60 @@ class DeleteAssignmentQuestionView(LoginRequiredMixin, UserPassesTestMixin, Dele
         material_id = self.object.assignment.material.id
         course_id = self.object.assignment.material.course.id
         response = super().delete(request, *args, **kwargs)
-        notify_students_of_updated_material.delay(course_id, material_id)
         return response
+
+class CourseSubmissionsView(LoginRequiredMixin, UserPassesTestMixin, ListView):
+    model = AssignmentSubmission
+    template_name = 'uniworld/course_submissions.html'
+    context_object_name = 'submissions'
+
+    def test_func(self):
+        course = Course.objects.get(pk=self.kwargs['course_id'])
+        return self.request.user == course.teacher
+
+    def get_queryset(self):
+        course = Course.objects.get(pk=self.kwargs['course_id'])
+        return AssignmentSubmission.objects.filter(assignment__material__course=course).order_by('-submitted_at')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['course'] = Course.objects.get(pk=self.kwargs['course_id'])
+        return context
+    
+class ViewSubmissionView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
+    model = AssignmentSubmission
+    template_name = 'uniworld/view_submission.html'
+    context_object_name = 'submission'
+
+    def test_func(self):
+        submission = self.get_object()
+        return self.request.user == submission.assignment.material.course.teacher
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        submission = self.get_object()
+        context['responses'] = QuestionResponse.objects.filter(submission=submission).order_by('question__id')
+        return context
+
+class GradeSubmissionView(LoginRequiredMixin, UserPassesTestMixin, View):
+    def test_func(self):
+        submission = get_object_or_404(AssignmentSubmission, pk=self.kwargs['pk'])
+        return self.request.user == submission.assignment.material.course.teacher
+
+    def post(self, request, pk):
+        submission = get_object_or_404(AssignmentSubmission, pk=pk)
+        total_score = request.POST.get('total_score')
+        feedback = request.POST.get('feedback')
+
+        is_new_grade = submission.total_score is None
+        submission.total_score = total_score
+        submission.feedback = feedback
+        submission.save()
+
+        if is_new_grade:
+            messages.success(request, 'Submission graded successfully. The student will be notified.')
+        else:
+            messages.success(request, 'Grade updated successfully.')
+        
+        return redirect('view-submission', pk=submission.pk)
+    

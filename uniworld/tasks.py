@@ -2,6 +2,7 @@ from celery import shared_task
 from django.core.mail import send_mail
 from django.contrib.auth import get_user_model
 from .models import Course, CourseMaterial, AssignmentSubmission
+from django.conf import settings
 
 @shared_task
 def notify_teacher_of_enrollment(course_id, student_id):
@@ -152,4 +153,38 @@ def notify_teacher_of_assignment_submission(course_id, student_id, assignment_id
     except AssignmentSubmission.DoesNotExist:
         print(f"Assignment with id {assignment_id} does not exist.")
 
+@shared_task
+def notify_student_of_graded_submission(submission_id):
+    from .models import AssignmentSubmission  # Import here to avoid circular import
+    
+    try:
+        submission = AssignmentSubmission.objects.get(id=submission_id)
+        student = submission.student
+        assignment = submission.assignment
+
+        subject = f'Your submission for "{assignment.material.title}" has been graded'
+        message = f"""
+        Dear {student.first_name},
+
+        Your submission for the assignment "{assignment.material.title}" in the course "{assignment.material.course.name}" has been graded.
+
+        Your score: {submission.total_score} / {assignment.total_marks}
+
+        Feedback: {submission.feedback or 'No feedback provided.'}
+
+        You can view the full details of your graded submission in your course dashboard.
+
+        Best regards,
+        The UniWorld Team
+        """
+
+        send_mail(
+            subject=subject,
+            message=message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[student.email],
+            fail_silently=False,
+        )
+    except AssignmentSubmission.DoesNotExist:
+        print(f"Submission with id {submission_id} does not exist.")
 

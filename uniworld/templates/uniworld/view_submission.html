@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% load django_bootstrap5 %}
+
+{% block content %}
+<div class="container py-5">
+    <h2>
+        Submission Details
+        {% if submission.total_score is not None %}
+            <span class="badge bg-success">Graded</span>
+        {% else %}
+            <span class="badge bg-warning text-dark">Pending</span>
+        {% endif %}
+    </h2>
+    <h3>{{ submission.assignment.material.title }}</h3>
+    <p><strong>Student:</strong> {{ submission.student.get_full_name }}</p>
+    <p><strong>Submitted at:</strong> {{ submission.submitted_at }}</p>
+
+    {% if submission.total_score is not None %}
+        <div class="alert alert-info">
+            <strong>Grade:</strong> {{ submission.total_score }} / {{ submission.assignment.total_marks }}
+            {% if submission.feedback %}
+                <br><strong>Feedback:</strong> {{ submission.feedback }}
+            {% endif %}
+        </div>
+    {% endif %}
+
+    <h4 class="mt-4">Responses</h4>
+    {% for response in responses %}
+        <div class="card mb-3">
+            <div class="card-body">
+                <h5 class="card-title">
+                    Question {{ forloop.counter }}
+                    <span class="float-end badge bg-primary">{{ response.question.marks }} mark{{ response.question.marks|pluralize }}</span>
+                </h5>
+                <p><strong>Question:</strong> {{ response.question.question_text }}</p>
+                {% if response.question.question_type == 'MCQ' %}
+                    <p><strong>Selected Option:</strong> {{ response.selected_option.option_text }}</p>
+                    <p><strong>Correct:</strong> {% if response.selected_option.is_correct %}Yes{% else %}No{% endif %}</p>
+                {% elif response.question.question_type == 'ESSAY' %}
+                    <p><strong>Answer:</strong></p>
+                    <div class="border p-3 bg-light">
+                        {{ response.response_text|linebreaks }}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    {% endfor %}
+
+    <form method="post" action="{% url 'grade-submission' submission.id %}">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label for="total_score" class="form-label">Total Score</label>
+            <input type="number" class="form-control" id="total_score" name="total_score" min="0" max="{{ submission.assignment.total_marks }}" value="{{ submission.total_score|default_if_none:'' }}" required>
+        </div>
+        <div class="mb-3">
+            <label for="feedback" class="form-label">Feedback</label>
+            <textarea class="form-control" id="feedback" name="feedback" rows="3">{{ submission.feedback|default_if_none:'' }}</textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">{% if submission.total_score is not None %}Update Grade{% else %}Submit Grade{% endif %}</button>
+    </form>
+
+    <a href="{% url 'course-submissions' submission.assignment.material.course.id %}" class="btn btn-secondary mt-3">Back to Submissions</a>
+</div>
+{% endblock %}
