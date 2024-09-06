@@ -25,10 +25,10 @@
                     <button class="nav-link active" id="details-tab" data-bs-toggle="tab" data-bs-target="#details" type="button" role="tab" aria-controls="details" aria-selected="true">Course Details</button>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="students-tab" data-bs-toggle="tab" data-bs-target="#students" type="button" role="tab" aria-controls="students" aria-selected="false">Enrolled Students</button>
+                    <button class="nav-link" id="feedback-tab" data-bs-toggle="tab" data-bs-target="#feedback" type="button" role="tab" aria-controls="feedback" aria-selected="false">Feedback</button>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="feedback-tab" data-bs-toggle="tab" data-bs-target="#feedback" type="button" role="tab" aria-controls="feedback" aria-selected="false">Feedback</button>
+                    <button class="nav-link" id="students-tab" data-bs-toggle="tab" data-bs-target="#students" type="button" role="tab" aria-controls="students" aria-selected="false">Enrolled Students</button>
                 </li>
                 {% if user == course.teacher %}
                     <li class="nav-item" role="presentation">
@@ -70,13 +70,13 @@
                             {% if is_enrolled or user == course.teacher %}
                                 <div class="col">
                                     <a href="{% url 'course-material' course.id %}" class="btn btn-info mb-4 w-100">
-                                        <i class="bi bi-book-fill me-2"></i>View Course Material
+                                        <i class="bi bi-book-fill me-2"></i>Course Material
                                     </a>
                                 </div>
                                 {% if user == course.teacher %}
                                     <div class="col">
                                         <a href="{% url 'course-submissions' course.id %}" class="btn btn-secondary mb-4 w-100">
-                                            <i class="bi bi-file-earmark-text-fill me-2"></i>View Submissions
+                                            <i class="bi bi-file-earmark-text-fill me-2"></i>Submissions
                                         </a>
                                     </div>
                                 {% endif %}
@@ -84,7 +84,7 @@
                             {% if course.chat_room %}
                                 <div class="col">
                                     <a href="{% url 'room' course.chat_room.id %}" class="btn btn-secondary mb-4 w-100">
-                                        <i class="bi bi-chat-dots-fill me-2"></i>Go to Course Chat Room
+                                        <i class="bi bi-chat-dots-fill me-2"></i>Chat Room
                                     </a>
                                 </div>
                             {% endif %}
@@ -253,7 +253,7 @@
                                 </nav>
                             {% endif %}
                         {% else %}
-                            <p class="text-muted">No blocked students.</p>
+                            <p class="text-muted">No blocked students. You can only block students from the enrolled students tab.</p>
                         {% endif %}
                     </div>
                 {% endif %}
