@@ -2,6 +2,7 @@ import json
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
 from .models import Room
+from django.contrib.auth import get_user_model
 
 # Create a consumer class
 class ChatConsumer(AsyncWebsocketConsumer):
@@ -24,6 +25,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
         await self.accept()
 
+        User = get_user_model()
+        self.user = await database_sync_to_async(User.objects.get)(id=self.scope["user"].id)
+
     async def disconnect(self, close_code):
         # Leave room group
         await self.channel_layer.group_discard(
@@ -37,6 +41,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
         message = data['message']
         username = data['username']
         room = data['room']
+
+        User = get_user_model()
+        user = await database_sync_to_async(User.objects.get)(id=self.scope["user"].id)
 
         msg = await self.save_message(username, room, message)
         if msg.flagged:
@@ -78,8 +85,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
     @database_sync_to_async
     def save_message(self, username, room, message):
         from .models import Room, Message
-        from django.contrib.auth.models import User
-
+        
+        User = get_user_model()
         user = User.objects.get(username=username)
         room = Room.objects.get(slug=room)
 
@@ -88,8 +95,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
     @database_sync_to_async
     def get_moderator(self):
         if self.moderator is None:
-            from django.contrib.auth.models import User
-
+            User = get_user_model()
             self.moderator = User.objects.get(username="moderator")
 
         return self.moderator

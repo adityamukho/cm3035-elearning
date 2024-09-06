@@ -1,13 +1,16 @@
 from django.test import TestCase, Client
 from django.urls import reverse
-from django.contrib.auth.models import User, Group
+from django.contrib.auth import get_user_model
 from users.models import Profile
+from django.contrib.auth.models import Group
+
+User = get_user_model()
 
 class RegisterViewTest(TestCase):
     def setUp(self):
         self.client = Client()
         self.register_url = reverse('register')
-        Group.objects.create(name='students')
+        self.group = Group.objects.create(name='students')
 
     def test_register_view_get(self):
         response = self.client.get(self.register_url)

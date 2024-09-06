@@ -332,20 +332,6 @@ class CourseMaterialListView(LoginRequiredMixin, ListView):
         context['course'] = get_object_or_404(Course, pk=self.kwargs['course_id'])
         return context
 
-class CourseMaterialDetailView(LoginRequiredMixin, DetailView):
-    model = CourseMaterial
-    template_name = 'uniworld/course_material_detail.html'
-    context_object_name = 'material'
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        material = self.get_object()
-        if material.type == 'lecture':
-            context['lecture'] = get_object_or_404(Lecture, material=material)
-        elif material.type == 'assignment':
-            context['assignment'] = get_object_or_404(Assignment, material=material)
-        return context
-    
 class AddCourseMaterialView(LoginRequiredMixin, View):
     def get(self, request, course_id):
         course = get_object_or_404(Course, pk=course_id)

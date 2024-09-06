@@ -1,11 +1,13 @@
 from django.views.generic.detail import DetailView
 from django.views.generic.list import ListView
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 
 from chat.models import Room, Message
 from rest_framework import viewsets
 from .serializers import RoomSerializer, MessageSerializer
 from rules.contrib.rest_framework import AutoPermissionViewSetMixin
+
+User = get_user_model()
 
 class RoomListView(ListView):
     model = Room

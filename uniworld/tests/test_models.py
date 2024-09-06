@@ -1,7 +1,9 @@
 from django.test import TestCase
-from django.contrib.auth.models import User, Group
-from django.core.exceptions import PermissionDenied
-from uniworld.models import Course, CourseMaterial, Lecture, Assignment, AssignmentQuestion, MCQOption, AssignmentSubmission, QuestionResponse, Feedback
+from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
+from uniworld.models import Course, CourseMaterial, Assignment, AssignmentQuestion, MCQOption, AssignmentSubmission, QuestionResponse, Feedback
+
+User = get_user_model()
 
 class CourseModelTest(TestCase):
     def setUp(self):

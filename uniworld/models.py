@@ -1,4 +1,6 @@
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
 from django.db import models
 from rules import Predicate, is_group_member, always_deny, is_authenticated
 from rules.contrib.models import RulesModel

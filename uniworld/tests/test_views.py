@@ -1,7 +1,10 @@
 from django.test import TestCase, Client
 from django.urls import reverse
-from django.contrib.auth.models import User, Group
+from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
 from uniworld.models import Course, CourseMaterial, Assignment, AssignmentQuestion, AssignmentSubmission, QuestionResponse, MCQOption, Feedback
+
+User = get_user_model()
 
 class CourseListViewTest(TestCase):
     def setUp(self):

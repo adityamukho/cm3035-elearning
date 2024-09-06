@@ -1,9 +1,11 @@
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 from users.models import Profile
 from users.serializers import UserSerializer, ProfileSerializer
+
+User = get_user_model()
 
 class UserViewSetTest(APITestCase):
     def setUp(self):

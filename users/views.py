@@ -1,7 +1,7 @@
 from django.contrib import messages
-from django.contrib.auth import login
+from django.contrib.auth import login, get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.contrib.auth.models import Group, User
+from django.contrib.auth.models import Group
 from django.contrib.auth.views import LoginView
 from django.db.models import Q
 from django.shortcuts import render, redirect, get_object_or_404
@@ -16,10 +16,11 @@ from django.utils import timezone
 from uniworld.models import Assignment
 from rest_framework import viewsets
 from rest_framework.response import Response
-from django.contrib.auth import get_user_model
 from .serializers import UserSerializer, ProfileSerializer
 from rules.contrib.rest_framework import AutoPermissionViewSetMixin
 from .models import Profile
+
+User = get_user_model()
 
 class RegisterView(FormView):
     template_name = 'users/register.html'
