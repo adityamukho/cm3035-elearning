@@ -31,6 +31,6 @@ jobs:
         python manage.py collectstatic --no-input
     - name: Run Tests
       run: |
-        pytest chat
-        pytest uniworld
-        pytest users
+        python manage.py test chat
+        python manage.py test uniworld
+        python manage.py test users

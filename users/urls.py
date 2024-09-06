@@ -13,6 +13,7 @@ from .views import *
 
 router = DefaultRouter()
 router.register(r'users', UserViewSet)
+router.register(r'profile', ProfileViewSet)
 
 urlpatterns = [
     path('login/', UserLoginView.as_view(redirect_authenticated_user=True, template_name='users/login.html'), name='login'),

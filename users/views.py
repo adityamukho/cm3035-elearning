@@ -15,6 +15,7 @@ from .permissions import IsOwnerOrReadOnly
 from django.utils import timezone
 from uniworld.models import Assignment
 from rest_framework import viewsets
+from rest_framework.response import Response
 from django.contrib.auth import get_user_model
 from .serializers import UserSerializer, ProfileSerializer
 from rules.contrib.rest_framework import AutoPermissionViewSetMixin
@@ -104,8 +105,41 @@ class UserLoginView(LoginView):
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = [IsOwnerOrReadOnly]
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+
+        if getattr(instance, '_prefetched_objects_cache', None):
+            instance._prefetched_objects_cache = {}
+
+        return Response(serializer.data)
+
+    def perform_update(self, serializer):
+        instance = serializer.instance
+        first_name = serializer.validated_data.get('first_name')
+        if first_name:
+            instance.first_name = first_name
+        serializer.save()
 
 class ProfileViewSet(AutoPermissionViewSetMixin, viewsets.ModelViewSet):
     queryset = Profile.objects.all()
     serializer_class = ProfileSerializer
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+
+        if getattr(instance, '_prefetched_objects_cache', None):
+            instance._prefetched_objects_cache = {}
+
+        return Response(serializer.data)
+
+    def perform_update(self, serializer):
+        serializer.save()
