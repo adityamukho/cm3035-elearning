@@ -1,6 +1,7 @@
 from django.test import TestCase
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from users.models import Profile
+from rules.contrib.models import RulesModel
 
 class ProfileModelTest(TestCase):
     def setUp(self):
@@ -10,6 +11,11 @@ class ProfileModelTest(TestCase):
             password='testpass123'
         )
         self.profile = Profile.objects.get(user=self.user)
+        self.other_user = User.objects.create_user(
+            username='otheruser',
+            email='other@example.com',
+            password='otherpass123'
+        )
 
     def test_profile_creation(self):
         self.assertEqual(self.profile.user.username, 'testuser')
@@ -25,3 +31,16 @@ class ProfileModelTest(TestCase):
             password='newpass123'
         )
         self.assertTrue(Profile.objects.filter(user=new_user).exists())
+
+    def test_profile_permissions(self):
+        # Test view permission
+        self.assertTrue(self.user.has_perm(Profile.get_perm('view'), self.profile))
+        self.assertTrue(self.other_user.has_perm(Profile.get_perm('view'), self.profile))
+
+        # Test change permission
+        self.assertTrue(self.user.has_perm(Profile.get_perm('change'), self.profile))
+        self.assertFalse(self.other_user.has_perm(Profile.get_perm('change'), self.profile))
+
+        # Test delete permission
+        self.assertFalse(self.user.has_perm(Profile.get_perm('delete'), self.profile))
+        self.assertFalse(self.other_user.has_perm(Profile.get_perm('delete'), self.profile))
