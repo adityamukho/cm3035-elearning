@@ -14,6 +14,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from .models import Course, CourseMaterial, Lecture, Assignment, AssignmentSubmission, AssignmentQuestion
 from .forms import CourseMaterialForm, LectureForm, AssignmentForm, AssignmentQuestionForm, MCQOptionFormSet, AssignmentSubmissionForm, QuestionResponseFormSet, QuestionResponse
+from .tasks import notify_teacher_of_enrollment, notify_teacher_of_unenrollment, notify_student_of_addition, notify_student_of_removal, notify_students_of_new_material, notify_students_of_updated_material, notify_teacher_of_assignment_submission
 
 from uniworld.models import Course, Feedback
 from chat.models import Room
@@ -145,6 +146,7 @@ class CourseLeaveView(View):
         if request.user.is_authenticated and request.user in course.students.all():
             course.students.remove(request.user)
             messages.success(request, f"You have successfully left the course '{course.name}'.")
+            notify_teacher_of_unenrollment.delay(course.id, request.user.id)  # Call the task here
         return redirect('course-detail', pk=pk)
 
 
@@ -157,6 +159,7 @@ class RemoveStudentView(LoginRequiredMixin, View):
         student = get_object_or_404(course.students, pk=student_id)
         course.students.remove(student)
         messages.success(request, f"{student.first_name} {student.last_name} has been removed from the course.")
+        notify_student_of_removal.delay(course.id, student.id)
         
         return redirect('course-detail', pk=course_id)
 
@@ -190,6 +193,7 @@ class AddStudentsView(LoginRequiredMixin, View):
                 student = get_user_model().objects.get(email=email)
                 if student not in course.students.all() and student not in course.blocked_students.all():
                     course.students.add(student)
+                    notify_student_of_addition.delay(course.id, student.id)
                     added_count += 1
             except get_user_model().DoesNotExist:
                 pass
@@ -230,6 +234,7 @@ class CourseEnrollView(View):
         if user not in course.students.all():
             course.students.add(user)
             messages.success(request, "You have successfully enrolled in the course.")
+            notify_teacher_of_enrollment.delay(course.id, user.id)  # Call the task here
         else:
             messages.info(request, "You are already enrolled in this course.")
 
@@ -365,6 +370,7 @@ class AddCourseMaterialView(LoginRequiredMixin, View):
                     assignment.material = material
                     assignment.save()
             
+            notify_students_of_new_material.delay(course.id, material.id)
             return redirect('course-material', course_id=course_id)
         
         lecture_form = LectureForm()
@@ -414,7 +420,8 @@ class SubmitAssignmentView(LoginRequiredMixin, CreateView):
         response_formset = context['response_formset']
         if response_formset.is_valid():
             response_formset.instance = self.object
-            response_formset.save()
+            submission = response_formset.save()
+            notify_teacher_of_assignment_submission.delay(assignment.course.id, self.request.user.id, submission.id)
         return redirect('course-material', course_id=assignment.material.course.id)
 
 class EditCourseMaterialView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
@@ -459,6 +466,7 @@ class EditCourseMaterialView(LoginRequiredMixin, UserPassesTestMixin, UpdateView
             if assignment_form.is_valid():
                 assignment_form.save()
         material.save()
+        notify_students_of_updated_material.delay(material.course.id, material.id)
         return super().form_valid(form)
 
     def get_success_url(self):
@@ -481,6 +489,7 @@ class AddAssignmentQuestionView(LoginRequiredMixin, UserPassesTestMixin, CreateV
             formset = MCQOptionFormSet(self.request.POST, instance=self.object)
             if formset.is_valid():
                 formset.save()
+        notify_students_of_updated_material.delay(assignment.material.course.id, assignment.material.id)
         return redirect('edit-course-material', pk=assignment.material.id)
 
     def get_context_data(self, **kwargs):
@@ -513,3 +522,11 @@ class DeleteAssignmentQuestionView(LoginRequiredMixin, UserPassesTestMixin, Dele
     def test_func(self):
         question = self.get_object()
         return self.request.user == question.assignment.material.course.teacher
+
+    def delete(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        material_id = self.object.assignment.material.id
+        course_id = self.object.assignment.material.course.id
+        response = super().delete(request, *args, **kwargs)
+        notify_students_of_updated_material.delay(course_id, material_id)
+        return response
