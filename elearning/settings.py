@@ -161,6 +161,11 @@ MEDIA_URL = '/media/'
 
 ASGI_APPLICATION = "elearning.asgi.application"
 
+redis_backend_host = os.environ.get('REDIS_BACKEND_HOST')
+redis_backend_port = os.environ.get('REDIS_BACKEND_PORT', 6379)
+redis_backend_user = os.environ.get('REDIS_BACKEND_USER')
+redis_backend_password = os.environ.get('REDIS_BACKEND_PASSWORD')
+
 if DEBUG:
     CHANNEL_LAYERS = {
         'default': {
@@ -168,8 +173,8 @@ if DEBUG:
         },
     }
 
-    CELERY_BROKER_URL = 'rediss://red-cr22mmo8fa8c739vnle0:QJwfSVRse04QpEu8ta4U35Nn2jKKkPiC@singapore-redis.render.com:6379'
-    CELERY_RESULT_BACKEND = 'rediss://red-cr22mmo8fa8c739vnle0:QJwfSVRse04QpEu8ta4U35Nn2jKKkPiC@singapore-redis.render.com:6379'
+    CELERY_BROKER_URL = f'rediss://{redis_backend_user}:{redis_backend_password}@{redis_backend_host}:{redis_backend_port}'
+    CELERY_RESULT_BACKEND = f'rediss://{redis_backend_user}:{redis_backend_password}@{redis_backend_host}:{redis_backend_port}'
     CELERY_REDIS_BACKEND_USE_SSL = {
         'ssl_cert_reqs': ssl.CERT_NONE
     }
@@ -179,9 +184,6 @@ if DEBUG:
 
     EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 else:
-    redis_backend_host = os.environ.get('REDIS_BACKEND_HOST')
-    redis_backend_port = os.environ.get('REDIS_BACKEND_PORT', 6379)
-
     CHANNEL_LAYERS = {
         'default': {
             'BACKEND': 'channels_redis.core.RedisChannelLayer',
