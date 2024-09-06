@@ -21,6 +21,7 @@ from chat.models import Room
 from django.contrib.auth import get_user_model
 from django.db.models import Q
 from django.contrib.auth.models import Group
+from django.utils import timezone
 import re
 
 def heartbeat(request):
@@ -464,7 +465,11 @@ class EditCourseMaterialView(LoginRequiredMixin, UserPassesTestMixin, UpdateView
             assignment = get_object_or_404(Assignment, material=material)
             assignment_form = AssignmentForm(self.request.POST, instance=assignment)
             if assignment_form.is_valid():
-                assignment_form.save()
+                assignment = assignment_form.save(commit=False)
+                # Ensure the due_date is timezone aware
+                if assignment.due_date and not timezone.is_aware(assignment.due_date):
+                    assignment.due_date = timezone.make_aware(assignment.due_date)
+                assignment.save()
         material.save()
         notify_students_of_updated_material.delay(material.course.id, material.id)
         return super().form_valid(form)

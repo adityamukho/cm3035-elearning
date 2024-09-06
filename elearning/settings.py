@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 import os
 from pathlib import Path
+import ssl
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -168,7 +169,13 @@ if DEBUG:
     }
 
     CELERY_BROKER_URL = 'rediss://red-cr22mmo8fa8c739vnle0:QJwfSVRse04QpEu8ta4U35Nn2jKKkPiC@singapore-redis.render.com:6379'
-    CELERY_RESULT_BACKEND = 'redis://red-cr22mmo8fa8c739vnle0:QJwfSVRse04QpEu8ta4U35Nn2jKKkPiC@singapore-redis.render.com:6379'
+    CELERY_RESULT_BACKEND = 'rediss://red-cr22mmo8fa8c739vnle0:QJwfSVRse04QpEu8ta4U35Nn2jKKkPiC@singapore-redis.render.com:6379'
+    CELERY_REDIS_BACKEND_USE_SSL = {
+        'ssl_cert_reqs': ssl.CERT_NONE
+    }
+    CELERY_BROKER_USE_SSL = {
+        'ssl_cert_reqs': ssl.CERT_NONE
+    }
 
     EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 else:

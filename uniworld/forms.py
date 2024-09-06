@@ -1,4 +1,5 @@
 from django import forms
+from django.utils import timezone
 from .models import CourseMaterial, Lecture, Assignment, AssignmentQuestion, MCQOption, AssignmentSubmission, QuestionResponse
 
 class CourseMaterialForm(forms.ModelForm):
@@ -12,11 +13,21 @@ class LectureForm(forms.ModelForm):
         fields = ['content', 'video_url', 'document']
 
 class AssignmentForm(forms.ModelForm):
-    due_date = forms.DateField(widget=forms.DateInput(attrs={'type': 'date'}))
-    
+    due_date = forms.DateTimeField(
+        widget=forms.DateTimeInput(attrs={'type': 'datetime-local'}),
+        input_formats=['%Y-%m-%dT%H:%M']
+    )
+
     class Meta:
         model = Assignment
         fields = ['due_date']
+
+    def clean_due_date(self):
+        due_date = self.cleaned_data['due_date']
+        if due_date and not timezone.is_aware(due_date):
+            # Make the datetime aware by adding the current timezone
+            return timezone.make_aware(due_date)
+        return due_date
 
 class AssignmentQuestionForm(forms.ModelForm):
     class Meta:
