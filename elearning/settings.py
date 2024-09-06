@@ -168,26 +168,31 @@ redis_backend_port = os.environ.get('REDIS_BACKEND_PORT', 6379)
 redis_backend_user = os.environ.get('REDIS_BACKEND_USER', '')
 redis_backend_password = os.environ.get('REDIS_BACKEND_PASSWORD', '')
 
+if redis_backend_user and redis_backend_password:
+    CELERY_BROKER_URL = f'{redis_backend_protocol}://{redis_backend_user}:{redis_backend_password}@{redis_backend_host}:{redis_backend_port}'
+    CELERY_RESULT_BACKEND = f'{redis_backend_protocol}://{redis_backend_user}:{redis_backend_password}@{redis_backend_host}:{redis_backend_port}'
+else:
+    CELERY_BROKER_URL = f'{redis_backend_protocol}://{redis_backend_host}:{redis_backend_port}'
+    CELERY_RESULT_BACKEND = f'{redis_backend_protocol}://{redis_backend_host}:{redis_backend_port}'
+
+if redis_backend_protocol.lower() == 'rediss':
+    CELERY_REDIS_BACKEND_USE_SSL = {
+        'ssl_cert_reqs': ssl.CERT_REQUIRED
+    }
+    CELERY_BROKER_USE_SSL = {
+        'ssl_cert_reqs': ssl.CERT_REQUIRED
+    }
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'UTC'
+
 if DEBUG:
     CHANNEL_LAYERS = {
         'default': {
             'BACKEND': 'channels.layers.InMemoryChannelLayer',
         },
     }
-
-    if redis_backend_user and redis_backend_password:
-        CELERY_BROKER_URL = f'{redis_backend_protocol}://{redis_backend_user}:{redis_backend_password}@{redis_backend_host}:{redis_backend_port}'
-        CELERY_RESULT_BACKEND = f'{redis_backend_protocol}://{redis_backend_user}:{redis_backend_password}@{redis_backend_host}:{redis_backend_port}'
-    else:
-        CELERY_BROKER_URL = f'{redis_backend_protocol}://{redis_backend_host}:{redis_backend_port}'
-        CELERY_RESULT_BACKEND = f'{redis_backend_protocol}://{redis_backend_host}:{redis_backend_port}'
-    if redis_backend_protocol.lower() == 'rediss':
-        CELERY_REDIS_BACKEND_USE_SSL = {
-            'ssl_cert_reqs': ssl.CERT_NONE
-        }
-        CELERY_BROKER_USE_SSL = {
-            'ssl_cert_reqs': ssl.CERT_NONE
-        }
 
     EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 else:
@@ -200,20 +205,12 @@ else:
         },
     }
 
-    CELERY_BROKER_URL = f'redis://{redis_backend_host}:{redis_backend_port}'
-    CELERY_RESULT_BACKEND = f'redis://{redis_backend_host}:{redis_backend_port}'
-
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
     EMAIL_HOST = os.environ.get('EMAIL_HOST')
     EMAIL_PORT = os.environ.get('EMAIL_PORT')
     EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
     EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
     EMAIL_USE_TLS = True
-
-CELERY_ACCEPT_CONTENT = ['json']
-CELERY_TASK_SERIALIZER = 'json'
-CELERY_RESULT_SERIALIZER = 'json'
-CELERY_TIMEZONE = 'UTC'
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
