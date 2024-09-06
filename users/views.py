@@ -11,6 +11,8 @@ from django.views.generic.edit import FormView
 
 from .forms import RegisterForm, UserUpdateForm, ProfileUpdateForm
 
+from django.utils import timezone
+from uniworld.models import Assignment
 
 class RegisterView(FormView):
     template_name = 'users/register.html'
@@ -31,14 +33,22 @@ class RegisterView(FormView):
 class ProfileView(LoginRequiredMixin, View):
     def get(self, request, pk):
         user = get_object_or_404(User, pk=pk)
+        is_own_profile = request.user == user
         user_form = UserUpdateForm(instance=user)
         profile_form = ProfileUpdateForm(instance=user.profile)
 
         context = {
             'user_form': user_form,
             'profile_form': profile_form,
-            'is_own_profile': user == request.user
+            'is_own_profile': is_own_profile,
         }
+
+        if is_own_profile and user.groups.filter(name='students').exists():
+            upcoming_assignments = Assignment.objects.filter(
+                Q(material__course__in=user.enrolled_courses.all()) &
+                Q(due_date__gt=timezone.now())
+            ).order_by('due_date')[:5]  # Get the next 5 upcoming assignments
+            context['upcoming_assignments'] = upcoming_assignments
 
         return render(request, 'users/profile.html', context)
 

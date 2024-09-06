@@ -1,50 +1,127 @@
 {% extends 'base.html' %}
+{% load django_bootstrap5 %}
 
 {% block content %}
-    <div class="card w-50 m-auto">
-        {% if profile_form.instance.avatar %}
-            <img src="{{ profile_form.instance.avatar.url }}" alt="{{ user_form.instance.username }}"
-                 class="card-img-top img-thumbnail"/>
-        {% endif %}
+<div class="container py-5">
+    <div class="card shadow">
         <div class="card-body">
-            <h5 class="card-title">{{ user_form.instance.first_name }} {{ user_form.instance.last_name }}</h5>
-            <p class="card-text"><a href="mailto:{{ user_form.instance.email }}">{{ user_form.instance.email }}</a></p>
-            <hr>
+            <div class="text-center mb-4">
+                {% if profile_form.instance.avatar %}
+                    <img src="{{ profile_form.instance.avatar.url }}" alt="{{ user_form.instance.username }}"
+                         class="img-thumbnail rounded-circle" style="width: 150px; height: 150px; object-fit: cover;"/>
+                {% endif %}
+                <h2 class="card-title mt-3">{{ user_form.instance.first_name }} {{ user_form.instance.last_name }}</h2>
+                <p class="card-text"><a href="mailto:{{ user_form.instance.email }}">{{ user_form.instance.email }}</a></p>
+            </div>
 
-            {% if is_own_profile %}
-                <form method="POST" enctype="multipart/form-data">
-                    {% csrf_token %}
-                <div class="mb-3">
-                    <label for="first-name" class="form-label">First Name:</label>
-                    <input type="text" id="first-name" class="form-control" value="{{ user_form.instance.first_name }}"/>
-                </div>
-                <div class="mb-3">
-                    <label for="last-name" class="form-label">Last Name:</label>
-                    <input type="text" id="last-name" class="form-control" value="{{ user_form.instance.last_name }}"/>
-                </div>
-                <div class="mb-3">
-                    <label for="email" class="form-label">Email Address:</label>
-                    <input type="email" id="email" class="form-control" value="{{ user_form.instance.email }}"/>
-                </div>
-                <div class="mb-3">
-                    <label for="avatar" class="form-label">Avatar:</label>
-                    <input type="file" name="avatar" id="avatar" class="form-control">
-                </div>
+            <ul class="nav nav-tabs" id="profileTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile" type="button" role="tab" aria-controls="profile" aria-selected="true">Profile</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="courses-tab" data-bs-toggle="tab" data-bs-target="#courses" type="button" role="tab" aria-controls="courses" aria-selected="false">
+                        {% if user_form.instance.groups.all.0.name == 'students' %}Enrolled Courses{% else %}Created Courses{% endif %}
+                    </button>
+                </li>
+                {% if is_own_profile and user_form.instance.groups.all.0.name == 'students' %}
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="deadlines-tab" data-bs-toggle="tab" data-bs-target="#deadlines" type="button" role="tab" aria-controls="deadlines" aria-selected="false">Upcoming Deadlines</button>
+                </li>
+                {% endif %}
+            </ul>
 
-                    <button type="submit" class="btn btn-primary full-width"><i class="bi bi-person-check-fill me-2"></i>Update Profile</button>
-                </form>
-            {% else %}
-                <dl class="row">
-                    <dt class="col-sm-3">First Name:</dt>
-                    <dd class="col-sm-9">{{ user_form.instance.first_name }}</dd>
+            <div class="tab-content mt-3" id="profileTabContent">
+                <div class="tab-pane fade show active" id="profile" role="tabpanel" aria-labelledby="profile-tab">
+                    {% if is_own_profile %}
+                        <form method="POST" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            {% bootstrap_form user_form layout='floating' %}
+                            {% bootstrap_form profile_form layout='floating' %}
+                            <button type="submit" class="btn btn-primary w-100"><i class="bi bi-person-check-fill me-2"></i>Update Profile</button>
+                        </form>
+                    {% else %}
+                        <dl class="row">
+                            <dt class="col-sm-3">First Name:</dt>
+                            <dd class="col-sm-9">{{ user_form.instance.first_name }}</dd>
 
-                    <dt class="col-sm-3">Last Name:</dt>
-                    <dd class="col-sm-9">{{ user_form.instance.last_name }}</dd>
+                            <dt class="col-sm-3">Last Name:</dt>
+                            <dd class="col-sm-9">{{ user_form.instance.last_name }}</dd>
 
-                    <dt class="col-sm-3">Email Address:</dt>
-                    <dd class="col-sm-9">{{ user_form.instance.email }}</dd>
-                </dl>
-            {% endif %}
+                            <dt class="col-sm-3">Email Address:</dt>
+                            <dd class="col-sm-9">{{ user_form.instance.email }}</dd>
+                        </dl>
+                    {% endif %}
+                </div>
+                <div class="tab-pane fade" id="courses" role="tabpanel" aria-labelledby="courses-tab">
+                    {% if user_form.instance.groups.all.0.name == 'students' %}
+                        <h3 class="h5 mb-3">Enrolled Courses</h3>
+                        {% if user_form.instance.enrolled_courses.all %}
+                            <ul class="list-group">
+                                {% for course in user_form.instance.enrolled_courses.all %}
+                                    <li class="list-group-item">
+                                        <a href="{% url 'course-detail' course.id %}">{{ course.name }}</a>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        {% else %}
+                            <p class="text-muted">Not enrolled in any courses.</p>
+                        {% endif %}
+                    {% else %}
+                        <h3 class="h5 mb-3">Created Courses</h3>
+                        {% if user_form.instance.course_set.all %}
+                            <ul class="list-group">
+                                {% for course in user_form.instance.course_set.all %}
+                                    <li class="list-group-item">
+                                        <a href="{% url 'course-detail' course.id %}">{{ course.name }}</a>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        {% else %}
+                            <p class="text-muted">No courses created.</p>
+                        {% endif %}
+                    {% endif %}
+                </div>
+                {% if is_own_profile and user_form.instance.groups.all.0.name == 'students' %}
+                <div class="tab-pane fade" id="deadlines" role="tabpanel" aria-labelledby="deadlines-tab">
+                    <h3 class="h5 mb-3">Upcoming Assignment Deadlines</h3>
+                    {% if upcoming_assignments %}
+                        <ul class="list-group">
+                            {% for assignment in upcoming_assignments %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-0">
+                                            <a href="{% url 'course-material-detail' assignment.material.id %}" class="text-decoration-none">
+                                                {{ assignment.material.title }}
+                                            </a>
+                                        </h6>
+                                        <small class="text-muted">
+                                            <a href="{% url 'course-detail' assignment.material.course.id %}" class="text-muted text-decoration-none">
+                                                {{ assignment.material.course.name }}
+                                            </a>
+                                        </small>
+                                    </div>
+                                    <span class="badge bg-primary rounded-pill">{{ assignment.due_date|date:"M d, Y H:i" }}</span>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="text-muted">No upcoming assignment deadlines.</p>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
         </div>
     </div>
+</div>
 {% endblock content %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        $('#profileTabs button').on('click', function (e) {
+            e.preventDefault();
+            $(this).tab('show');
+        });
+    });
+</script>
+{% endblock %}
