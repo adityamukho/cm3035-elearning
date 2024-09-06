@@ -2,15 +2,16 @@ from django.db import models
 from django.contrib.auth.models import User
 from PIL import Image
 from rules.contrib.models import RulesModel
-from rules import Predicate, always_deny
+from rules import Predicate, always_deny, is_authenticated
 
-is_profile_user = Predicate(lambda user, profile: profile.user == user)
+is_profile_owner = Predicate(lambda user, profile: profile.user == user)
 
 class Profile(RulesModel):
     class Meta:
         rules_permissions = {
+            'view': is_authenticated,
             'add': always_deny,
-            'change': is_profile_user,
+            'change': is_profile_owner,
             'delete': always_deny,
         }
 

@@ -1,14 +1,19 @@
 from django.db import models
 from django.conf import settings
+from rules import is_group_member, always_deny, is_authenticated
+from rules.contrib.models import RulesModel
 
-# Replace direct User import with this:
 User = settings.AUTH_USER_MODEL
 
-from django.utils.text import slugify
-from django.db.models.signals import pre_save
-from django.dispatch import receiver
+class Room(RulesModel):
+    class Meta:
+        rules_permissions = {
+            'view': is_authenticated,
+            'add': is_group_member('teachers'),
+            'change': always_deny,
+            'delete': always_deny,
+        }
 
-class Room(models.Model):
     name = models.CharField(max_length=255)
     slug = models.SlugField(unique=True)
     creator = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_rooms')
@@ -16,20 +21,15 @@ class Room(models.Model):
     def __str__(self):
         return self.name
 
-@receiver(pre_save, sender=Room)
-def create_room_slug(sender, instance, *args, **kwargs):
-    if not instance.slug:
-        base_slug = slugify(instance.name)
-        slug = base_slug
-        n = 1
-        while Room.objects.filter(slug=slug).exists():
-            slug = f"{base_slug}-{n}"
-            n += 1
-        instance.slug = slug
-
-class Message(models.Model):
+class Message(RulesModel):
     class Meta:
         ordering = ('date_added',)
+        rules_permissions = {
+            'view': is_authenticated,
+            'add': is_authenticated,
+            'change': always_deny,
+            'delete': always_deny,
+        }
 
     room = models.ForeignKey(Room, related_name='messages', on_delete=models.CASCADE)
     user = models.ForeignKey(User, related_name='messages', on_delete=models.CASCADE)
