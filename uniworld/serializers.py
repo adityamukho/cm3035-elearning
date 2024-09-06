@@ -14,17 +14,17 @@ class CourseMaterialSerializer(serializers.ModelSerializer):
 class LectureSerializer(serializers.ModelSerializer):
     class Meta:
         model = Lecture
-        fields = ['id', 'material', 'content', 'document', 'video_url']
+        fields = ['material', 'content', 'document', 'video_url']
 
 class AssignmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Assignment
-        fields = ['id', 'material', 'due_date']
+        fields = ['material', 'due_date']
 
 class AssignmentQuestionSerializer(serializers.ModelSerializer):
     class Meta:
         model = AssignmentQuestion
-        fields = ['id', 'assignment', 'question_text', 'question_type']
+        fields = ['id', 'assignment', 'question_text', 'question_type', 'marks']
 
 class MCQOptionSerializer(serializers.ModelSerializer):
     class Meta:
@@ -34,7 +34,7 @@ class MCQOptionSerializer(serializers.ModelSerializer):
 class AssignmentSubmissionSerializer(serializers.ModelSerializer):
     class Meta:
         model = AssignmentSubmission
-        fields = ['id', 'assignment', 'student', 'submission_date', 'grade']
+        fields = ['id', 'assignment', 'student', 'submitted_at', 'total_score']
 
 class QuestionResponseSerializer(serializers.ModelSerializer):
     class Meta:

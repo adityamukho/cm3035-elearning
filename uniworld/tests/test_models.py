@@ -94,4 +94,124 @@ class CourseMaterialModelTest(TestCase):
         non_enrolled_student = User.objects.create_user(username='non_enrolled', password='12345')
         self.assertFalse(non_enrolled_student.has_perm(CourseMaterial.get_perm('view'), self.material))
 
-# Add more test classes for other models (Lecture, Assignment, AssignmentQuestion, MCQOption, AssignmentSubmission, QuestionResponse, Feedback)
+class AssignmentQuestionModelTest(TestCase):
+    def setUp(self):
+        self.teacher_group = Group.objects.create(name='teachers')
+        self.student_group = Group.objects.create(name='students')
+        self.teacher = User.objects.create_user(username='teacher', password='12345')
+        self.teacher.groups.add(self.teacher_group)
+        self.student = User.objects.create_user(username='student', password='12345')
+        self.student.groups.add(self.student_group)
+        self.course = Course.objects.create(name='Test Course', description='Test Description', teacher=self.teacher)
+        self.course.students.add(self.student)
+        self.material = CourseMaterial.objects.create(course=self.course, title='Test Material', type='assignment', sequence=1)
+        self.assignment = Assignment.objects.create(material=self.material, due_date='2023-12-31 23:59:59 +00:00')
+        self.question = AssignmentQuestion.objects.create(assignment=self.assignment, question_text='Test Question', question_type='MCQ', marks=5)
+
+    def test_assignment_question_creation(self):
+        self.assertEqual(self.question.assignment, self.assignment)
+        self.assertEqual(self.question.question_text, 'Test Question')
+        self.assertEqual(self.question.question_type, 'MCQ')
+        self.assertEqual(self.question.marks, 5)
+
+    def test_assignment_question_permissions(self):
+        self.assertTrue(self.teacher.has_perm(AssignmentQuestion.get_perm('view'), self.question))
+        self.assertTrue(self.student.has_perm(AssignmentQuestion.get_perm('view'), self.question))
+        self.assertTrue(self.teacher.has_perm(AssignmentQuestion.get_perm('change'), self.question))
+        self.assertFalse(self.student.has_perm(AssignmentQuestion.get_perm('change'), self.question))
+        self.assertTrue(self.teacher.has_perm(AssignmentQuestion.get_perm('delete'), self.question))
+        self.assertFalse(self.student.has_perm(AssignmentQuestion.get_perm('delete'), self.question))
+
+class MCQOptionModelTest(TestCase):
+    def setUp(self):
+        self.teacher_group = Group.objects.create(name='teachers')
+        self.student_group = Group.objects.create(name='students')
+        self.teacher = User.objects.create_user(username='teacher', password='12345')
+        self.teacher.groups.add(self.teacher_group)
+        self.student = User.objects.create_user(username='student', password='12345')
+        self.student.groups.add(self.student_group)
+        self.course = Course.objects.create(name='Test Course', description='Test Description', teacher=self.teacher)
+        self.course.students.add(self.student)
+        self.material = CourseMaterial.objects.create(course=self.course, title='Test Material', type='assignment', sequence=1)
+        self.assignment = Assignment.objects.create(material=self.material, due_date='2023-12-31 23:59:59 +00:00')
+        self.question = AssignmentQuestion.objects.create(assignment=self.assignment, question_text='Test Question', question_type='MCQ', marks=5)
+        self.option = MCQOption.objects.create(question=self.question, option_text='Test Option', is_correct=True)
+
+    def test_mcq_option_creation(self):
+        self.assertEqual(self.option.question, self.question)
+        self.assertEqual(self.option.option_text, 'Test Option')
+        self.assertTrue(self.option.is_correct)
+
+    def test_mcq_option_permissions(self):
+        self.assertTrue(self.teacher.has_perm(MCQOption.get_perm('view'), self.option))
+        self.assertTrue(self.student.has_perm(MCQOption.get_perm('view'), self.option))
+        self.assertTrue(self.teacher.has_perm(MCQOption.get_perm('change'), self.option))
+        self.assertFalse(self.student.has_perm(MCQOption.get_perm('change'), self.option))
+        self.assertTrue(self.teacher.has_perm(MCQOption.get_perm('delete'), self.option))
+        self.assertFalse(self.student.has_perm(MCQOption.get_perm('delete'), self.option))
+
+class AssignmentSubmissionModelTest(TestCase):
+    def setUp(self):
+        self.teacher = User.objects.create_user(username='teacher', password='12345')
+        self.student = User.objects.create_user(username='student', password='12345')
+        self.course = Course.objects.create(name='Test Course', description='Test Description', teacher=self.teacher)
+        self.material = CourseMaterial.objects.create(course=self.course, title='Test Material', type='assignment', sequence=1)
+        self.assignment = Assignment.objects.create(material=self.material, due_date='2023-12-31 23:59:59 +00:00')
+        self.submission = AssignmentSubmission.objects.create(assignment=self.assignment, student=self.student)
+
+    def test_assignment_submission_creation(self):
+        self.assertEqual(self.submission.assignment, self.assignment)
+        self.assertEqual(self.submission.student, self.student)
+
+    def test_assignment_submission_permissions(self):
+        self.assertTrue(self.teacher.has_perm(AssignmentSubmission.get_perm('view'), self.submission))
+        self.assertTrue(self.student.has_perm(AssignmentSubmission.get_perm('view'), self.submission))
+        self.assertTrue(self.teacher.has_perm(AssignmentSubmission.get_perm('change'), self.submission))
+        self.assertFalse(self.student.has_perm(AssignmentSubmission.get_perm('change'), self.submission))
+        self.assertFalse(self.teacher.has_perm(AssignmentSubmission.get_perm('delete'), self.submission))
+        self.assertFalse(self.student.has_perm(AssignmentSubmission.get_perm('delete'), self.submission))
+
+class QuestionResponseModelTest(TestCase):
+    def setUp(self):
+        self.teacher = User.objects.create_user(username='teacher', password='12345')
+        self.student = User.objects.create_user(username='student', password='12345')
+        self.course = Course.objects.create(name='Test Course', description='Test Description', teacher=self.teacher)
+        self.material = CourseMaterial.objects.create(course=self.course, title='Test Material', type='assignment', sequence=1)
+        self.assignment = Assignment.objects.create(material=self.material, due_date='2023-12-31 23:59:59 +00:00')
+        self.question = AssignmentQuestion.objects.create(assignment=self.assignment, question_text='Test Question', question_type='MCQ', marks=5)
+        self.submission = AssignmentSubmission.objects.create(assignment=self.assignment, student=self.student)
+        self.response = QuestionResponse.objects.create(submission=self.submission, question=self.question, response_text='Test Response')
+
+    def test_question_response_creation(self):
+        self.assertEqual(self.response.submission, self.submission)
+        self.assertEqual(self.response.question, self.question)
+        self.assertEqual(self.response.response_text, 'Test Response')
+
+    def test_question_response_permissions(self):
+        self.assertTrue(self.teacher.has_perm(QuestionResponse.get_perm('view'), self.response))
+        self.assertTrue(self.student.has_perm(QuestionResponse.get_perm('view'), self.response))
+        self.assertTrue(self.teacher.has_perm(QuestionResponse.get_perm('change'), self.response))
+        self.assertFalse(self.student.has_perm(QuestionResponse.get_perm('change'), self.response))
+        self.assertFalse(self.teacher.has_perm(QuestionResponse.get_perm('delete'), self.response))
+        self.assertFalse(self.student.has_perm(QuestionResponse.get_perm('delete'), self.response))
+
+class FeedbackModelTest(TestCase):
+    def setUp(self):
+        self.teacher = User.objects.create_user(username='teacher', password='12345')
+        self.student = User.objects.create_user(username='student', password='12345')
+        self.course = Course.objects.create(name='Test Course', description='Test Description', teacher=self.teacher)
+        self.feedback = Feedback.objects.create(course=self.course, user=self.student, rating=4, comment='Good course')
+
+    def test_feedback_creation(self):
+        self.assertEqual(self.feedback.course, self.course)
+        self.assertEqual(self.feedback.user, self.student)
+        self.assertEqual(self.feedback.rating, 4)
+        self.assertEqual(self.feedback.comment, 'Good course')
+
+    def test_feedback_permissions(self):
+        self.assertTrue(self.teacher.has_perm(Feedback.get_perm('view'), self.feedback))
+        self.assertTrue(self.student.has_perm(Feedback.get_perm('view'), self.feedback))
+        self.assertFalse(self.teacher.has_perm(Feedback.get_perm('change'), self.feedback))
+        self.assertTrue(self.student.has_perm(Feedback.get_perm('change'), self.feedback))
+        self.assertFalse(self.teacher.has_perm(Feedback.get_perm('delete'), self.feedback))
+        self.assertTrue(self.student.has_perm(Feedback.get_perm('delete'), self.feedback))

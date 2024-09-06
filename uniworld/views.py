@@ -296,6 +296,10 @@ class SearchView(View):
 class CourseFeedbackView(LoginRequiredMixin, View):
     def post(self, request, course_id):
         course = get_object_or_404(Course, pk=course_id)
+
+        if not request.user.has_perm(Course.get_perm('add_feedback'), course):
+            return HttpResponseForbidden("You do not have permission to add feedback to this course.")
+
         rating = request.POST.get('rating')
         comment = request.POST.get('comment', '')
 
@@ -413,6 +417,10 @@ class CourseMaterialDetailView(LoginRequiredMixin, DetailView):
 class SubmitAssignmentView(LoginRequiredMixin, View):
     def post(self, request, assignment_id):
         assignment = get_object_or_404(Assignment, pk=assignment_id)
+        
+        if not request.user.has_perm(Assignment.get_perm('add_submission'), assignment):
+            return HttpResponseForbidden("You do not have permission to submit this assignment.")
+        
         submission = AssignmentSubmission.objects.create(
             assignment=assignment,
             student=request.user
@@ -659,31 +667,111 @@ class CourseMaterialViewSet(AutoPermissionViewSetMixin, viewsets.ModelViewSet):
 
         return super().create(request, *args, **kwargs)
 
-class LectureViewSet(AutoPermissionViewSetMixin, viewsets.ModelViewSet):
+class LectureViewSet(viewsets.ModelViewSet):
     queryset = Lecture.objects.all()
     serializer_class = LectureSerializer
+
+    def create(self, request, *args, **kwargs):
+        material_id = request.data.get('material')
+        material = get_object_or_404(CourseMaterial, id=material_id)
+
+        if not request.user.has_perm(Course.get_perm('add_course_material'), material.course):
+            raise PermissionDenied("You do not have permission to add a lecture to this course.")
+
+        return super().create(request, *args, **kwargs)
 
 class AssignmentViewSet(AutoPermissionViewSetMixin, viewsets.ModelViewSet):
     queryset = Assignment.objects.all()
     serializer_class = AssignmentSerializer
+    permission_type_map = {
+        **AutoPermissionViewSetMixin.permission_type_map,
+        'create': None,
+    }
+
+    def create(self, request, *args, **kwargs):
+        material_id = request.data.get('material')
+        material = get_object_or_404(CourseMaterial, id=material_id)
+
+        if not request.user.has_perm(Course.get_perm('add_course_material'), material.course):
+            raise PermissionDenied("You do not have permission to add an assignment to this course.")
+
+        return super().create(request, *args, **kwargs)
 
 class AssignmentQuestionViewSet(AutoPermissionViewSetMixin, viewsets.ModelViewSet):
     queryset = AssignmentQuestion.objects.all()
     serializer_class = AssignmentQuestionSerializer
+    permission_type_map = {
+        **AutoPermissionViewSetMixin.permission_type_map,
+        'create': None,
+    }
+
+    def create(self, request, *args, **kwargs):
+        assignment_id = request.data.get('assignment')
+        assignment = get_object_or_404(Assignment, material=assignment_id)
+
+        if not request.user.has_perm(Assignment.get_perm('add_question'), assignment):
+            raise PermissionDenied("You do not have permission to add a question to this assignment.")
+
+        return super().create(request, *args, **kwargs)
 
 class AssignmentSubmissionViewSet(AutoPermissionViewSetMixin, viewsets.ModelViewSet):
     queryset = AssignmentSubmission.objects.all()
     serializer_class = AssignmentSubmissionSerializer
+    permission_type_map = {
+        **AutoPermissionViewSetMixin.permission_type_map,
+        'create': None,
+    }
+
+    def create(self, request, *args, **kwargs):
+        assignment_id = request.data.get('assignment')
+        assignment = get_object_or_404(Assignment, material=assignment_id)
+
+        if not request.user.has_perm(Assignment.get_perm('add_submission'), assignment):
+            raise PermissionDenied("You do not have permission to add a submission to this assignment.")
+
+        return super().create(request, *args, **kwargs)
 
 class QuestionResponseViewSet(AutoPermissionViewSetMixin, viewsets.ModelViewSet):
     queryset = QuestionResponse.objects.all()
     serializer_class = QuestionResponseSerializer
+    permission_type_map = {
+        **AutoPermissionViewSetMixin.permission_type_map,
+        'create': None,
+    }
+
+    def create(self, request, *args, **kwargs):
+        question_id = request.data.get('question')
+        question = get_object_or_404(AssignmentQuestion, id=question_id)
+        if not request.user.has_perm(AssignmentQuestion.get_perm('add_response'), question):
+            raise PermissionDenied("You do not have permission to add a response to this question.")
+        return super().create(request, *args, **kwargs)
 
 class MCQOptionViewSet(AutoPermissionViewSetMixin, viewsets.ModelViewSet):
     queryset = MCQOption.objects.all()
     serializer_class = MCQOptionSerializer
+    permission_type_map = {
+        **AutoPermissionViewSetMixin.permission_type_map,   
+        'create': None,
+    }
+
+    def create(self, request, *args, **kwargs):
+        question_id = request.data.get('question')
+        question = get_object_or_404(AssignmentQuestion, id=question_id)
+        if not request.user.has_perm(AssignmentQuestion.get_perm('add_option'), question):
+            raise PermissionDenied("You do not have permission to add an option to this question.")
+        return super().create(request, *args, **kwargs)
 
 class FeedbackViewSet(AutoPermissionViewSetMixin, viewsets.ModelViewSet):
     queryset = Feedback.objects.all()
     serializer_class = FeedbackSerializer
+    permission_type_map = {
+        **AutoPermissionViewSetMixin.permission_type_map,
+        'create': None,
+    }
 
+    def create(self, request, *args, **kwargs):
+        course_id = request.data.get('course')
+        course = get_object_or_404(Course, id=course_id)
+        if not request.user.has_perm(Course.get_perm('add_feedback'), course):
+            raise PermissionDenied("You do not have permission to add feedback to this course.")
+        return super().create(request, *args, **kwargs)
