@@ -108,6 +108,9 @@
                                     </a>
                                     {% if user == course.teacher %}
                                         <div>
+                                            <a href="{% url 'student-submissions' course.id student.id %}" class="btn btn-info btn-sm">
+                                                <i class="bi bi-file-earmark-text me-1"></i>View Submissions
+                                            </a>
                                             <form method="post" action="{% url 'remove-student' course.id student.id %}" class="d-inline">
                                                 {% csrf_token %}
                                                 <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to remove this student?');">

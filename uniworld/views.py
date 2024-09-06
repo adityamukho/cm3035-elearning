@@ -19,6 +19,9 @@ from django.db.models import Q
 from django.contrib.auth.models import Group
 from django.utils import timezone
 import re
+from django.shortcuts import get_object_or_404
+from django.views.generic import ListView
+from .models import Course, AssignmentSubmission
 
 def heartbeat(request):
     return HttpResponse("alive")
@@ -611,5 +614,24 @@ class MySubmissionsView(LoginRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['course'] = get_object_or_404(Course, pk=self.kwargs['course_id'])
+        return context
+
+class StudentSubmissionsView(LoginRequiredMixin, ListView):
+    model = AssignmentSubmission
+    template_name = 'uniworld/student_submissions.html'
+    context_object_name = 'submissions'
+
+    def get_queryset(self):
+        course = get_object_or_404(Course, id=self.kwargs['course_id'])
+        student = get_object_or_404(course.students, id=self.kwargs['student_id'])
+        return AssignmentSubmission.objects.filter(
+            assignment__material__course=course,
+            student=student
+        ).order_by('-submitted_at')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['course'] = get_object_or_404(Course, id=self.kwargs['course_id'])
+        context['student'] = get_object_or_404(context['course'].students, id=self.kwargs['student_id'])
         return context
     

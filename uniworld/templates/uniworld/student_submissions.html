@@ -3,22 +3,21 @@
 
 {% block content %}
 <div class="container py-5">
-    <h2>Submissions for {{ course.name }}</h2>
+    <h2>Submissions for {{ student.get_full_name }} in {{ course.name }}</h2>
     {% if submissions %}
         <table class="table table-striped">
             <thead>
                 <tr>
-                    <th>Student</th>
                     <th>Assignment</th>
                     <th>Submitted At</th>
                     <th>Status</th>
+                    <th>Score</th>
                     <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
                 {% for submission in submissions %}
                     <tr>
-                        <td>{{ submission.student.get_full_name }}</td>
                         <td>{{ submission.assignment.material.title }}</td>
                         <td>{{ submission.submitted_at }}</td>
                         <td>
@@ -26,6 +25,13 @@
                                 <span class="badge bg-success">Graded</span>
                             {% else %}
                                 <span class="badge bg-warning text-dark">Pending</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if submission.total_score is not None %}
+                                {{ submission.total_score }} / {{ submission.assignment.total_marks }}
+                            {% else %}
+                                N/A
                             {% endif %}
                         </td>
                         <td>
