@@ -59,7 +59,7 @@
                             <ul class="list-group">
                                 {% for course in user_form.instance.enrolled_courses.all %}
                                     <li class="list-group-item">
-                                        <a href="{% url 'course-detail' course.id %}">{{ course.name }}</a>
+                                        <a href="{% url 'course-view' course.id %}">{{ course.name }}</a>
                                     </li>
                                 {% endfor %}
                             </ul>
@@ -72,7 +72,7 @@
                             <ul class="list-group">
                                 {% for course in user_form.instance.course_set.all %}
                                     <li class="list-group-item">
-                                        <a href="{% url 'course-detail' course.id %}">{{ course.name }}</a>
+                                        <a href="{% url 'course-view' course.id %}">{{ course.name }}</a>
                                     </li>
                                 {% endfor %}
                             </ul>
@@ -90,12 +90,12 @@
                                 <li class="list-group-item d-flex justify-content-between align-items-center">
                                     <div>
                                         <h6 class="mb-0">
-                                            <a href="{% url 'course-material-detail' assignment.material.id %}" class="text-decoration-none">
+                                            <a href="{% url 'course-material-view' assignment.material.id %}" class="text-decoration-none">
                                                 {{ assignment.material.title }}
                                             </a>
                                         </h6>
                                         <small class="text-muted">
-                                            <a href="{% url 'course-detail' assignment.material.course.id %}" class="text-muted text-decoration-none">
+                                            <a href="{% url 'course-view' assignment.material.course.id %}" class="text-muted text-decoration-none">
                                                 {{ assignment.material.course.name }}
                                             </a>
                                         </small>

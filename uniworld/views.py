@@ -106,7 +106,7 @@ class CourseDetailView(AutoPermissionRequiredMixin, LoginRequiredMixin, DetailVi
                 messages.success(request, f"You have successfully enrolled in {self.object.name}.")
             else:
                 messages.info(request, f"You are already enrolled in {self.object.name}.")
-        return redirect(reverse('course-detail', kwargs={'pk': self.object.pk}))
+        return redirect(reverse('course-view', kwargs={'pk': self.object.pk}))
 
 
 class CourseCreateView(AutoPermissionRequiredMixin, CreateView):
@@ -149,7 +149,7 @@ class CourseLeaveView(View):
         if request.user.is_authenticated and request.user in course.students.all():
             course.students.remove(request.user)
             messages.success(request, f"You have successfully left the course '{course.name}'.")
-        return redirect('course-detail', pk=pk)
+        return redirect('course-view', pk=pk)
 
 
 class RemoveStudentView(LoginRequiredMixin, View):
@@ -162,7 +162,7 @@ class RemoveStudentView(LoginRequiredMixin, View):
         course.students.remove(student)
         messages.success(request, f"{student.first_name} {student.last_name} has been removed from the course.")
         
-        return redirect('course-detail', pk=course_id)
+        return redirect('course-view', pk=course_id)
 
 
 class BlockStudentView(LoginRequiredMixin, View):
@@ -189,7 +189,7 @@ class BlockStudentView(LoginRequiredMixin, View):
         except get_user_model().DoesNotExist:
             messages.error(request, f"No user found with ID {student_id}.")
         
-        return redirect('course-detail', pk=course_id)
+        return redirect('course-view', pk=course_id)
 
 
 class AddStudentsView(LoginRequiredMixin, View):
@@ -212,7 +212,7 @@ class AddStudentsView(LoginRequiredMixin, View):
                 pass
         
         messages.success(request, f"{added_count} student(s) have been added to the course.")
-        return redirect('course-detail', pk=course_id)
+        return redirect('course-view', pk=course_id)
 
 
 class StudentSearchView(View):
@@ -242,7 +242,7 @@ class CourseEnrollView(View):
 
         if user in course.blocked_students.all():
             messages.error(request, "You are blocked from enrolling in this course.")
-            return redirect('course-detail', pk=course_id)
+            return redirect('course-view', pk=course_id)
 
         if user not in course.students.all():
             course.students.add(user)
@@ -250,7 +250,7 @@ class CourseEnrollView(View):
         else:
             messages.info(request, "You are already enrolled in this course.")
 
-        return redirect('course-detail', pk=course_id)
+        return redirect('course-view', pk=course_id)
 
 
 class UnblockStudentView(LoginRequiredMixin, View):
@@ -263,7 +263,7 @@ class UnblockStudentView(LoginRequiredMixin, View):
         course.blocked_students.remove(student)
         messages.success(request, f"{student.first_name} {student.last_name} has been unblocked from the course.")
         
-        return redirect('course-detail', pk=course_id)
+        return redirect('course-view', pk=course_id)
 
 class SearchView(View):
     def get(self, request, *args, **kwargs):
@@ -276,7 +276,7 @@ class SearchView(View):
             for course in courses:
                 results.append({
                     'label': course.name,
-                    'url': reverse('course-detail', args=[course.pk])
+                    'url': reverse('course-view', args=[course.pk])
                 })
 
             # Search users in 'teachers' or 'students' groups
@@ -314,7 +314,7 @@ class CourseFeedbackView(LoginRequiredMixin, View):
         else:
             messages.error(request, "Please provide a rating.")
 
-        return redirect('course-detail', pk=course_id)
+        return redirect('course-view', pk=course_id)
     
 class CourseMaterialListView(LoginRequiredMixin, ListView):
     model = CourseMaterial
@@ -336,7 +336,7 @@ class AddCourseMaterialView(LoginRequiredMixin, View):
     def get(self, request, course_id):
         course = get_object_or_404(Course, pk=course_id)
         if request.user != course.teacher:
-            return redirect('course-detail', pk=course_id)
+            return redirect('course-view', pk=course_id)
         
         material_form = CourseMaterialForm()
         lecture_form = LectureForm()
@@ -351,7 +351,7 @@ class AddCourseMaterialView(LoginRequiredMixin, View):
     def post(self, request, course_id):
         course = get_object_or_404(Course, pk=course_id)
         if request.user != course.teacher:
-            return redirect('course-detail', pk=course_id)
+            return redirect('course-view', pk=course_id)
         
         material_form = CourseMaterialForm(request.POST)
         if material_form.is_valid():

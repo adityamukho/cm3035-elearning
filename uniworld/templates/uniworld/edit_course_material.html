@@ -48,7 +48,7 @@
         <button type="submit" class="btn btn-primary mt-3">Save Changes</button>
     </form>
     <a href="{% url 'delete-course-material' pk=form.instance.id %}" class="btn btn-danger mt-3">Delete Course Material</a>
-    <a href="{% url 'course-material-detail' pk=form.instance.id %}" class="btn btn-secondary mt-3">
+    <a href="{% url 'course-material-view' pk=form.instance.id %}" class="btn btn-secondary mt-3">
         <i class="bi bi-arrow-left me-2"></i>Back to {{ form.instance.title }}
     </a>
 </div>

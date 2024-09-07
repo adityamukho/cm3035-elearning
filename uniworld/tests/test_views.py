@@ -36,13 +36,13 @@ class CourseDetailViewTest(TestCase):
 
     def test_course_detail_view(self):
         self.client.login(username='teacher', password='12345')
-        response = self.client.get(reverse('course-detail', kwargs={'pk': self.course.pk}))
+        response = self.client.get(reverse('course-view', kwargs={'pk': self.course.pk}))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Test Course')
         self.assertContains(response, 'Test Description')
 
         self.client.login(username='student', password='12345')
-        response = self.client.get(reverse('course-detail', kwargs={'pk': self.course.pk}))
+        response = self.client.get(reverse('course-view', kwargs={'pk': self.course.pk}))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Test Course')
         self.assertContains(response, 'Test Description')

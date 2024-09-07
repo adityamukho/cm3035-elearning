@@ -10,14 +10,14 @@
                 <i class="bi bi-plus-circle me-2"></i>Add Course Material
             </a>
         {% endif %}
-        <a href="{% url 'course-detail' course.id %}" class="btn btn-secondary">
+        <a href="{% url 'course-view' course.id %}" class="btn btn-secondary">
             <i class="bi bi-arrow-left me-2"></i>Back to Course Detail
         </a>
     </div>
     {% if course_material %}
         <div class="list-group">
             {% for material in course_material %}
-                <a href="{% url 'course-material-detail' material.id %}" class="list-group-item list-group-item-action">
+                <a href="{% url 'course-material-view' material.id %}" class="list-group-item list-group-item-action">
                     {{ material.title }} - {{ material.get_type_display }}
                 </a>
             {% endfor %}

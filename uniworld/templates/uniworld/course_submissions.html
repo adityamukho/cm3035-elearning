@@ -38,6 +38,6 @@
     {% else %}
         <p>No submissions yet.</p>
     {% endif %}
-    <a href="{% url 'course-detail' course.id %}" class="btn btn-secondary mt-3">Back to Course</a>
+    <a href="{% url 'course-view' course.id %}" class="btn btn-secondary mt-3">Back to Course</a>
 </div>
 {% endblock %}
