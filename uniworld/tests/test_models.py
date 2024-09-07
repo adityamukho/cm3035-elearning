@@ -65,6 +65,26 @@ class CourseModelTest(TestCase):
         self.assertTrue(new_student.has_perm(Course.get_perm('enroll_self'), self.course))
         self.assertFalse(self.student.has_perm(Course.get_perm('enroll_self'), self.course))
 
+        # Test leave_course permission
+        self.assertTrue(self.student.has_perm(Course.get_perm('leave_course'), self.course))
+        self.assertFalse(self.teacher.has_perm(Course.get_perm('leave_course'), self.course))
+
+        # Test remove_student permission
+        self.assertTrue(self.teacher.has_perm(Course.get_perm('remove_student'), self.course))
+        self.assertFalse(self.student.has_perm(Course.get_perm('remove_student'), self.course))
+
+        # Test block_student permission
+        self.assertTrue(self.teacher.has_perm(Course.get_perm('block_student'), self.course))
+        self.assertFalse(self.student.has_perm(Course.get_perm('block_student'), self.course))
+
+        # Test unblock_student permission
+        self.assertTrue(self.teacher.has_perm(Course.get_perm('unblock_student'), self.course))
+        self.assertFalse(self.student.has_perm(Course.get_perm('unblock_student'), self.course))
+
+        # Test add_submission permission
+        self.assertFalse(self.teacher.has_perm(Course.get_perm('add_submission'), self.course))
+        self.assertTrue(self.student.has_perm(Course.get_perm('add_submission'), self.course))
+
 class CourseMaterialModelTest(TestCase):
     def setUp(self):
         self.teacher = User.objects.create_user(username='teacher', password='12345')
@@ -80,15 +100,10 @@ class CourseMaterialModelTest(TestCase):
         self.assertEqual(self.material.sequence, 1)
 
     def test_course_material_permissions(self):
-        # Test view permission
         self.assertTrue(self.teacher.has_perm(CourseMaterial.get_perm('view'), self.material))
         self.assertTrue(self.student.has_perm(CourseMaterial.get_perm('view'), self.material))
-
-        # Test change permission
         self.assertTrue(self.teacher.has_perm(CourseMaterial.get_perm('change'), self.material))
         self.assertFalse(self.student.has_perm(CourseMaterial.get_perm('change'), self.material))
-
-        # Test delete permission
         self.assertTrue(self.teacher.has_perm(CourseMaterial.get_perm('delete'), self.material))
         self.assertFalse(self.student.has_perm(CourseMaterial.get_perm('delete'), self.material))
 
@@ -123,6 +138,10 @@ class AssignmentQuestionModelTest(TestCase):
         self.assertFalse(self.student.has_perm(AssignmentQuestion.get_perm('change'), self.question))
         self.assertTrue(self.teacher.has_perm(AssignmentQuestion.get_perm('delete'), self.question))
         self.assertFalse(self.student.has_perm(AssignmentQuestion.get_perm('delete'), self.question))
+        self.assertTrue(self.teacher.has_perm(AssignmentQuestion.get_perm('add_option'), self.question))
+        self.assertFalse(self.student.has_perm(AssignmentQuestion.get_perm('add_option'), self.question))
+        self.assertFalse(self.teacher.has_perm(AssignmentQuestion.get_perm('add_response'), self.question))
+        self.assertTrue(self.student.has_perm(AssignmentQuestion.get_perm('add_response'), self.question))
 
 class MCQOptionModelTest(TestCase):
     def setUp(self):

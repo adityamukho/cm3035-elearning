@@ -1,19 +1,21 @@
 from django.views.generic.detail import DetailView
 from django.views.generic.list import ListView
 from django.contrib.auth import get_user_model
+from django.contrib.auth.mixins import LoginRequiredMixin
 
 from chat.models import Room, Message
 from rest_framework import viewsets
 from .serializers import RoomSerializer, MessageSerializer
 from rules.contrib.rest_framework import AutoPermissionViewSetMixin
+from rules.contrib.views import AutoPermissionRequiredMixin
 
 User = get_user_model()
 
-class RoomListView(ListView):
+class RoomListView(LoginRequiredMixin, ListView):
     model = Room
     context_object_name = 'room_list'
 
-class RoomDetailView(DetailView):
+class RoomDetailView(AutoPermissionRequiredMixin, DetailView):
     model = Room
     template_name = 'chat/room_detail.html'
 

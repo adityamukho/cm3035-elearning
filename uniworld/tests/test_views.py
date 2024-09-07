@@ -104,8 +104,12 @@ class AssignmentQuestionViewTest(TestCase):
 class AssignmentSubmissionViewTest(TestCase):
     def setUp(self):
         self.client = Client()
+        self.teacher_group = Group.objects.create(name='teachers')
+        self.student_group = Group.objects.create(name='students')
         self.teacher = User.objects.create_user(username='teacher', password='12345')
+        self.teacher.groups.add(self.teacher_group)
         self.student = User.objects.create_user(username='student', password='12345')
+        self.student.groups.add(self.student_group)
         self.course = Course.objects.create(name='Test Course', description='Test Description', teacher=self.teacher)
         self.course.students.add(self.student)
         self.material = CourseMaterial.objects.create(course=self.course, title='Test Material', type='assignment', sequence=1)

@@ -13,7 +13,7 @@ from django.views.generic import ListView
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from rest_framework import viewsets
-from rules.contrib.views import AutoPermissionRequiredMixin
+from rules.contrib.views import AutoPermissionRequiredMixin, PermissionRequiredMixin
 from rules.contrib.rest_framework import AutoPermissionViewSetMixin
 from rest_framework.exceptions import PermissionDenied
 
@@ -63,7 +63,7 @@ class CourseListView(LoginRequiredMixin, ListView):
         return context
 
 
-class CourseDetailView(AutoPermissionRequiredMixin, LoginRequiredMixin, DetailView):
+class CourseDetailView(AutoPermissionRequiredMixin, DetailView):
     model = Course
     context_object_name = 'course'
     template_name = 'uniworld/course_detail.html'
@@ -143,21 +143,21 @@ class CourseDeleteView(AutoPermissionRequiredMixin, DeleteView):
         return super(CourseDeleteView, self).form_valid(form)
 
 
-class CourseLeaveView(View):
+class CourseLeaveView(PermissionRequiredMixin, View):
+    permission_required = Course.get_perm('leave_course')
+
     def post(self, request, pk):
         course = get_object_or_404(Course, pk=pk)
-        if request.user.is_authenticated and request.user in course.students.all():
-            course.students.remove(request.user)
-            messages.success(request, f"You have successfully left the course '{course.name}'.")
+        course.students.remove(request.user)
+        messages.success(request, f"You have successfully left the course '{course.name}'.")
         return redirect('course-view', pk=pk)
 
 
-class RemoveStudentView(LoginRequiredMixin, View):
+class RemoveStudentView(PermissionRequiredMixin, View):
+    permission_required = Course.get_perm('remove_student')
+
     def post(self, request, course_id, student_id):
         course = get_object_or_404(Course, pk=course_id)
-        if request.user != course.teacher:
-            return HttpResponseForbidden("You don't have permission to remove students from this course.")
-        
         student = get_object_or_404(course.students, pk=student_id)
         course.students.remove(student)
         messages.success(request, f"{student.first_name} {student.last_name} has been removed from the course.")
@@ -165,11 +165,11 @@ class RemoveStudentView(LoginRequiredMixin, View):
         return redirect('course-view', pk=course_id)
 
 
-class BlockStudentView(LoginRequiredMixin, View):
+class BlockStudentView(PermissionRequiredMixin, View):
+    permission_required = Course.get_perm('block_student')
+
     def post(self, request, course_id, student_id):
         course = get_object_or_404(Course, pk=course_id)
-        if request.user != course.teacher:
-            return HttpResponseForbidden("You don't have permission to block students from this course.")
         
         try:
             student = get_user_model().objects.get(pk=student_id)
@@ -192,12 +192,11 @@ class BlockStudentView(LoginRequiredMixin, View):
         return redirect('course-view', pk=course_id)
 
 
-class AddStudentsView(LoginRequiredMixin, View):
+class AddStudentsView(PermissionRequiredMixin, View):
+    permission_required = Course.get_perm('add_student')
+
     def post(self, request, course_id):
         course = get_object_or_404(Course, pk=course_id)
-        if request.user != course.teacher:
-            return HttpResponseForbidden("You don't have permission to add students to this course.")
-        
         student_emails = request.POST.get('student_emails', '').split(',')
         student_emails = [re.search(r'[\w\.-]+@[\w\.-]+', email).group() for email in student_emails]
         
@@ -215,7 +214,9 @@ class AddStudentsView(LoginRequiredMixin, View):
         return redirect('course-view', pk=course_id)
 
 
-class StudentSearchView(View):
+class StudentSearchView(PermissionRequiredMixin, View):
+    permission_required = Course.get_perm('enroll_student')
+
     def get(self, request, *args, **kwargs):
         term = request.GET.get('term', '')
         course_id = request.GET.get('course_id')
@@ -235,7 +236,9 @@ class StudentSearchView(View):
         return JsonResponse(results, safe=False)
 
 
-class CourseEnrollView(View):
+class CourseEnrollView(PermissionRequiredMixin, View):
+    permission_required = Course.get_perm('enroll_self')
+
     def post(self, request, course_id):
         course = get_object_or_404(Course, id=course_id)
         user = request.user
@@ -253,19 +256,18 @@ class CourseEnrollView(View):
         return redirect('course-view', pk=course_id)
 
 
-class UnblockStudentView(LoginRequiredMixin, View):
+class UnblockStudentView(PermissionRequiredMixin, View):
+    permission_required = Course.get_perm('unblock_student')
+
     def post(self, request, course_id, student_id):
         course = get_object_or_404(Course, pk=course_id)
-        if request.user != course.teacher:
-            return HttpResponseForbidden("You don't have permission to unblock students from this course.")
-        
         student = get_object_or_404(get_user_model(), pk=student_id)
         course.blocked_students.remove(student)
         messages.success(request, f"{student.first_name} {student.last_name} has been unblocked from the course.")
         
         return redirect('course-view', pk=course_id)
 
-class SearchView(View):
+class SearchView(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
         query = request.GET.get('q', '')
         results = []
@@ -296,10 +298,9 @@ class SearchView(View):
 class CourseFeedbackView(LoginRequiredMixin, View):
     def post(self, request, course_id):
         course = get_object_or_404(Course, pk=course_id)
-
         if not request.user.has_perm(Course.get_perm('add_feedback'), course):
-            return HttpResponseForbidden("You do not have permission to add feedback to this course.")
-
+            return HttpResponseForbidden("You don't have permission to add feedback for this course.")
+        
         rating = request.POST.get('rating')
         comment = request.POST.get('comment', '')
 
@@ -323,8 +324,8 @@ class CourseMaterialListView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         course = get_object_or_404(Course, pk=self.kwargs['course_id'])
-        if self.request.user != course.teacher and self.request.user not in course.students.all():
-            return CourseMaterial.objects.none()
+        if not self.request.user.has_perm(Course.get_perm('view'), course):
+            return HttpResponseForbidden("You don't have permission to view this course material.")
         return course.materials.all()
 
     def get_context_data(self, **kwargs):
@@ -332,7 +333,9 @@ class CourseMaterialListView(LoginRequiredMixin, ListView):
         context['course'] = get_object_or_404(Course, pk=self.kwargs['course_id'])
         return context
 
-class AddCourseMaterialView(LoginRequiredMixin, View):
+class AddCourseMaterialView(PermissionRequiredMixin, View):
+    permission_required = Course.get_perm('add_course_material')
+
     def get(self, request, course_id):
         course = get_object_or_404(Course, pk=course_id)
         if request.user != course.teacher:
@@ -383,7 +386,7 @@ class AddCourseMaterialView(LoginRequiredMixin, View):
             'assignment_form': assignment_form,
         })
     
-class CourseMaterialDetailView(LoginRequiredMixin, DetailView):
+class CourseMaterialDetailView(AutoPermissionRequiredMixin, DetailView):
     model = CourseMaterial
     template_name = 'uniworld/course_material_detail.html'
     context_object_name = 'material'
@@ -403,9 +406,9 @@ class CourseMaterialDetailView(LoginRequiredMixin, DetailView):
 class SubmitAssignmentView(LoginRequiredMixin, View):
     def post(self, request, assignment_id):
         assignment = get_object_or_404(Assignment, pk=assignment_id)
-        
-        if not request.user.has_perm(Assignment.get_perm('add_submission'), assignment):
-            return HttpResponseForbidden("You do not have permission to submit this assignment.")
+        course = assignment.material.course
+        if not request.user.has_perm(Course.get_perm('add_submission'), course):
+            return HttpResponseForbidden("You don't have permission to submit assignments for this course.")
         
         submission = AssignmentSubmission.objects.create(
             assignment=assignment,
@@ -430,7 +433,7 @@ class SubmitAssignmentView(LoginRequiredMixin, View):
 
         return redirect('course-material', course_id=assignment.material.course.id)
 
-class EditCourseMaterialView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+class EditCourseMaterialView(AutoPermissionRequiredMixin, UpdateView):
     model = CourseMaterial
     template_name = 'uniworld/edit_course_material.html'
     form_class = CourseMaterialForm
@@ -440,10 +443,6 @@ class EditCourseMaterialView(LoginRequiredMixin, UserPassesTestMixin, UpdateView
         form.fields['type'].widget.attrs['readonly'] = True
         form.fields['type'].widget.attrs['disabled'] = True
         return form
-
-    def test_func(self):
-        material = self.get_object()
-        return self.request.user == material.course.teacher
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -481,17 +480,16 @@ class EditCourseMaterialView(LoginRequiredMixin, UserPassesTestMixin, UpdateView
     def get_success_url(self):
         return reverse_lazy('course-material', kwargs={'course_id': self.object.course.id})
 
-class AddAssignmentQuestionView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
+class AddAssignmentQuestionView(LoginRequiredMixin, CreateView):
     model = AssignmentQuestion
     form_class = AssignmentQuestionForm
     template_name = 'uniworld/add_assignment_question.html'
 
-    def test_func(self):
-        assignment = get_object_or_404(Assignment, pk=self.kwargs['assignment_id'])
-        return self.request.user == assignment.material.course.teacher
-
     def form_valid(self, form):
         assignment = get_object_or_404(Assignment, pk=self.kwargs['assignment_id'])
+        if not self.request.user.has_perm(Assignment.get_perm('add_question'), assignment):
+            return HttpResponseForbidden("You don't have permission to add questions to this assignment.")
+        
         form.instance.assignment = assignment
         self.object = form.save()
         if form.instance.question_type == 'MCQ':
@@ -508,7 +506,7 @@ class AddAssignmentQuestionView(LoginRequiredMixin, UserPassesTestMixin, CreateV
             context['mcq_formset'] = MCQOptionFormSet()
         return context
 
-class DeleteCourseMaterialView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+class DeleteCourseMaterialView(AutoPermissionRequiredMixin, DeleteView):
     model = CourseMaterial
     template_name = 'uniworld/confirm_delete.html'
 
@@ -519,17 +517,13 @@ class DeleteCourseMaterialView(LoginRequiredMixin, UserPassesTestMixin, DeleteVi
         material = self.get_object()
         return self.request.user == material.course.teacher
 
-class DeleteAssignmentQuestionView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+class DeleteAssignmentQuestionView(AutoPermissionRequiredMixin, DeleteView):
     model = AssignmentQuestion
     template_name = 'uniworld/confirm_delete.html'
 
     def get_success_url(self):
         question = self.get_object()
         return reverse_lazy('edit-course-material', kwargs={'pk': question.assignment.material.id})
-
-    def test_func(self):
-        question = self.get_object()
-        return self.request.user == question.assignment.material.course.teacher
 
     def delete(self, request, *args, **kwargs):
         self.object = self.get_object()
@@ -538,17 +532,15 @@ class DeleteAssignmentQuestionView(LoginRequiredMixin, UserPassesTestMixin, Dele
         response = super().delete(request, *args, **kwargs)
         return response
 
-class CourseSubmissionsView(LoginRequiredMixin, UserPassesTestMixin, ListView):
+class CourseSubmissionsView(LoginRequiredMixin, ListView):
     model = AssignmentSubmission
     template_name = 'uniworld/course_submissions.html'
     context_object_name = 'submissions'
 
-    def test_func(self):
-        course = Course.objects.get(pk=self.kwargs['course_id'])
-        return self.request.user == course.teacher
-
     def get_queryset(self):
-        course = Course.objects.get(pk=self.kwargs['course_id'])
+        course = get_object_or_404(Course, pk=self.kwargs['course_id'])
+        if not self.request.user.has_perm(Course.get_perm('add_course_material'), course):
+            return HttpResponseForbidden("You don't have permission to view this course submissions.")
         return AssignmentSubmission.objects.filter(assignment__material__course=course).order_by('-submitted_at')
 
     def get_context_data(self, **kwargs):
@@ -556,14 +548,11 @@ class CourseSubmissionsView(LoginRequiredMixin, UserPassesTestMixin, ListView):
         context['course'] = Course.objects.get(pk=self.kwargs['course_id'])
         return context
     
-class ViewSubmissionView(LoginRequiredMixin, View):
+class ViewSubmissionView(PermissionRequiredMixin, View):
+    permission_required = AssignmentSubmission.get_perm('view')
+
     def get(self, request, pk):
         submission = get_object_or_404(AssignmentSubmission, pk=pk)
-        
-        # Check if the user is the student who made the submission or the teacher of the course
-        if request.user != submission.student and request.user != submission.assignment.material.course.teacher:
-            return HttpResponseForbidden("You don't have permission to view this submission.")
-        
         responses = submission.responses.all()
         is_teacher = request.user == submission.assignment.material.course.teacher
         is_student = request.user == submission.student
@@ -575,10 +564,8 @@ class ViewSubmissionView(LoginRequiredMixin, View):
         }
         return render(request, 'uniworld/view_submission.html', context)
 
-class GradeSubmissionView(LoginRequiredMixin, UserPassesTestMixin, View):
-    def test_func(self):
-        submission = get_object_or_404(AssignmentSubmission, pk=self.kwargs['pk'])
-        return self.request.user == submission.assignment.material.course.teacher
+class GradeSubmissionView(PermissionRequiredMixin, View):
+    permission_required = AssignmentSubmission.get_perm('change')
 
     def post(self, request, pk):
         submission = get_object_or_404(AssignmentSubmission, pk=pk)
@@ -606,6 +593,8 @@ class MySubmissionsView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         course = get_object_or_404(Course, pk=self.kwargs['course_id'])
+        if not self.request.user.has_perm(Course.get_perm('add_submission'), course):
+            return HttpResponseForbidden("You don't have permission to view this course submissions.")
         return AssignmentSubmission.objects.filter(assignment__material__course=course, student=self.request.user).order_by('-submitted_at')
 
     def get_context_data(self, **kwargs):
@@ -620,6 +609,8 @@ class StudentSubmissionsView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         course = get_object_or_404(Course, id=self.kwargs['course_id'])
+        if not self.request.user.has_perm(Course.get_perm('add_course_material'), course):
+            return HttpResponseForbidden("You don't have permission to view this course submissions.")
         student = get_object_or_404(course.students, id=self.kwargs['student_id'])
         return AssignmentSubmission.objects.filter(
             assignment__material__course=course,
@@ -712,7 +703,7 @@ class AssignmentSubmissionViewSet(AutoPermissionViewSetMixin, viewsets.ModelView
         assignment_id = request.data.get('assignment')
         assignment = get_object_or_404(Assignment, material=assignment_id)
 
-        if not request.user.has_perm(Assignment.get_perm('add_submission'), assignment):
+        if not request.user.has_perm(Course.get_perm('add_submission'), assignment.material.course):
             raise PermissionDenied("You do not have permission to add a submission to this assignment.")
 
         return super().create(request, *args, **kwargs)

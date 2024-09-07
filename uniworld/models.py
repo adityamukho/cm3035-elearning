@@ -23,7 +23,6 @@ is_course_author_response = Predicate(lambda user, response: user == response.qu
 is_submission_author = Predicate(lambda user, submission: user == submission.student)
 is_response_author = Predicate(lambda user, response: user == response.submission.student)
 is_feedback_author = Predicate(lambda user, feedback: user == feedback.user)
-is_enrolled_assignment = Predicate(lambda user, assignment: user in assignment.material.course.students.all())
 is_course_author_assignment = Predicate(lambda user, assignment: user == assignment.material.course.teacher)
 
 class Course(RulesModel):
@@ -34,11 +33,16 @@ class Course(RulesModel):
             'change': is_course_author,
             'delete': is_course_author,
             'add_course_material': is_course_author,
-            'add_feedback': is_group_member('students') & is_enrolled,
+            'add_feedback': is_enrolled,
             'add_question': is_course_author,
             'add_option': is_course_author,
             'enroll_student': is_course_author,
             'enroll_self': is_group_member('students') & ~is_enrolled,
+            'leave_course': is_enrolled,
+            'remove_student': is_course_author,
+            'block_student': is_course_author,
+            'unblock_student': is_course_author,
+            'add_submission': is_enrolled,
         }
 
     name = models.CharField(max_length=200)
@@ -126,7 +130,6 @@ class Lecture(models.Model):
 class Assignment(RulesModel):
     class Meta:
         rules_permissions = {
-            'add_submission': is_enrolled_assignment,
             'add_question': is_course_author_assignment,
         }
 
