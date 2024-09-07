@@ -10,7 +10,4 @@ This student project was developed for submission in an online course. **It is n
 
 ## Demo
 
-The demo app is deployed at [https://cm3035-elearning.onrender.com](https://cm3035-elearning.onrender.com).
-It runs on a free tier instance that spins down after a period of inactivity.
-
-**Your first page load might take up to a minute to complete.**
+The demo app is deployed at [https://cm3035-elearning.adityamukho.com/](https://cm3035-elearning.adityamukho.com/).
