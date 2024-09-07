@@ -25,15 +25,13 @@ SECRET_KEY = 'django-insecure-+907x9*p47ln6a5f05-*9@)hqj+!y=b%zj0bm(e2qf$hmkytfa
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', False)
 
-ALLOWED_HOSTS = ['localhost', 'cm3035-elearning.onrender.com', 'cm3035-elearning.adityamukho.com']
+ALLOWED_HOSTS = ['localhost', 'cm3035-elearning.adityamukho.com']
 CSRF_TRUSTED_ORIGINS = [
     'http://localhost:8000',
-    'https://cm3035-elearning.onrender.com',
     'https://cm3035-elearning.adityamukho.com'
 ]
 CORS_ORIGIN_WHITELIST = [
     'http://localhost:8000',
-    'https://cm3035-elearning.onrender.com',
     'https://cm3035-elearning.adityamukho.com'
 ]
 
@@ -173,28 +171,8 @@ MEDIA_URL = '/media/'
 
 ASGI_APPLICATION = "elearning.asgi.application"
 
-redis_backend_protocol = os.environ.get('REDIS_BACKEND_PROTOCOL', 'redis')
-redis_backend_host = os.environ.get('REDIS_BACKEND_HOST', 'localhost')
-redis_backend_port = os.environ.get('REDIS_BACKEND_PORT', 6379)
-redis_backend_user = os.environ.get('REDIS_BACKEND_USER', '')
-redis_backend_password = os.environ.get('REDIS_BACKEND_PASSWORD', '')
-
-if redis_backend_user and redis_backend_password:
-    CELERY_BROKER_URL = f'{redis_backend_protocol}://{redis_backend_user}:{redis_backend_password}@{redis_backend_host}:{redis_backend_port}'
-    CELERY_RESULT_BACKEND = f'{redis_backend_protocol}://{redis_backend_user}:{redis_backend_password}@{redis_backend_host}:{redis_backend_port}'
-    channel_redis_host = f'{redis_backend_protocol}://{redis_backend_user}:{redis_backend_password}@{redis_backend_host}:{redis_backend_port}'
-else:
-    CELERY_BROKER_URL = f'{redis_backend_protocol}://{redis_backend_host}:{redis_backend_port}'
-    CELERY_RESULT_BACKEND = f'{redis_backend_protocol}://{redis_backend_host}:{redis_backend_port}'
-    channel_redis_host = f'{redis_backend_protocol}://{redis_backend_host}:{redis_backend_port}'
-
-if redis_backend_protocol.lower() == 'rediss':
-    CELERY_REDIS_BACKEND_USE_SSL = {
-        'ssl_cert_reqs': ssl.CERT_NONE
-    }
-    CELERY_BROKER_USE_SSL = {
-        'ssl_cert_reqs': ssl.CERT_NONE
-    }
+CELERY_BROKER_URL = 'redis://localhost:6379'
+CELERY_RESULT_BACKEND = 'redis://localhost:6379'
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
@@ -205,13 +183,11 @@ CHANNEL_LAYERS = {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
         'CONFIG': {
             'hosts': [{
-                'address': channel_redis_host,
+                'address': 'redis://localhost:6379',
             }],
         },
     },
 }
-if redis_backend_protocol.lower() == 'rediss':
-    CHANNEL_LAYERS['default']['CONFIG']['hosts'][0]['ssl_cert_reqs'] = ssl.CERT_NONE
 
 if DEBUG:
     EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
