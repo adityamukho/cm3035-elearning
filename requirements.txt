@@ -15,3 +15,4 @@ redis~=5.0.8
 openai~=1.42.0
 django-bootstrap5~=24.2
 djangorestframework~=3.15.2
+hiredis~=3.0.0

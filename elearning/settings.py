@@ -172,40 +172,40 @@ redis_backend_password = os.environ.get('REDIS_BACKEND_PASSWORD', '')
 if redis_backend_user and redis_backend_password:
     CELERY_BROKER_URL = f'{redis_backend_protocol}://{redis_backend_user}:{redis_backend_password}@{redis_backend_host}:{redis_backend_port}'
     CELERY_RESULT_BACKEND = f'{redis_backend_protocol}://{redis_backend_user}:{redis_backend_password}@{redis_backend_host}:{redis_backend_port}'
+    channel_redis_host = f'{redis_backend_protocol}://{redis_backend_user}:{redis_backend_password}@{redis_backend_host}:{redis_backend_port}'
 else:
     CELERY_BROKER_URL = f'{redis_backend_protocol}://{redis_backend_host}:{redis_backend_port}'
     CELERY_RESULT_BACKEND = f'{redis_backend_protocol}://{redis_backend_host}:{redis_backend_port}'
+    channel_redis_host = f'{redis_backend_protocol}://{redis_backend_host}:{redis_backend_port}'
 
 if redis_backend_protocol.lower() == 'rediss':
     CELERY_REDIS_BACKEND_USE_SSL = {
-        'ssl_cert_reqs': ssl.CERT_REQUIRED
+        'ssl_cert_reqs': ssl.CERT_NONE
     }
     CELERY_BROKER_USE_SSL = {
-        'ssl_cert_reqs': ssl.CERT_REQUIRED
+        'ssl_cert_reqs': ssl.CERT_NONE
     }
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = 'UTC'
 
-if DEBUG:
-    CHANNEL_LAYERS = {
-        'default': {
-            'BACKEND': 'channels.layers.InMemoryChannelLayer',
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            'hosts': [{
+                'address': channel_redis_host,
+            }],
         },
-    }
+    },
+}
+if redis_backend_protocol.lower() == 'rediss':
+    CHANNEL_LAYERS['default']['CONFIG']['hosts'][0]['ssl_cert_reqs'] = ssl.CERT_NONE
 
+if DEBUG:
     EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 else:
-    CHANNEL_LAYERS = {
-        'default': {
-            'BACKEND': 'channels_redis.core.RedisChannelLayer',
-            'CONFIG': {
-                'hosts': [(redis_backend_host, redis_backend_port)],
-            },
-        },
-    }
-
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
     EMAIL_HOST = os.environ.get('EMAIL_HOST')
     EMAIL_PORT = os.environ.get('EMAIL_PORT')
