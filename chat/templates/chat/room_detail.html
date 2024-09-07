@@ -60,7 +60,7 @@
         const userName = '{{ request.user.username|escapejs }}'; // Add this line
 
         const chatSocket = new WebSocket(
-            'ws://' + window.location.host + '/ws/' + roomName + '/'
+            (window.location.protocol === 'https:' ? 'wss://' : 'ws://') + window.location.host + '/ws/' + roomName + '/'
         );
 
         const chatMessages = document.querySelector('#chat-messages');
