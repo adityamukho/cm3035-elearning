@@ -13,7 +13,7 @@ from django.views.generic import ListView
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from rest_framework import viewsets
-from rules.contrib.views import AutoPermissionRequiredMixin, PermissionRequiredMixin
+from rules.contrib.views import AutoPermissionRequiredMixin
 from rules.contrib.rest_framework import AutoPermissionViewSetMixin
 from rest_framework.exceptions import PermissionDenied
 
@@ -143,21 +143,23 @@ class CourseDeleteView(AutoPermissionRequiredMixin, DeleteView):
         return super(CourseDeleteView, self).form_valid(form)
 
 
-class CourseLeaveView(PermissionRequiredMixin, View):
-    permission_required = Course.get_perm('leave_course')
-
+class CourseLeaveView(LoginRequiredMixin, View):
     def post(self, request, pk):
         course = get_object_or_404(Course, pk=pk)
+        if not request.user.has_perm(Course.get_perm('leave_course'), course):
+            return HttpResponseForbidden("You don't have permission to leave this course.")
+
         course.students.remove(request.user)
         messages.success(request, f"You have successfully left the course '{course.name}'.")
         return redirect('course-view', pk=pk)
 
 
-class RemoveStudentView(PermissionRequiredMixin, View):
-    permission_required = Course.get_perm('remove_student')
-
+class RemoveStudentView(LoginRequiredMixin, View):
     def post(self, request, course_id, student_id):
         course = get_object_or_404(Course, pk=course_id)
+        if not request.user.has_perm(Course.get_perm('remove_student'), course):
+            return HttpResponseForbidden("You don't have permission to remove students from this course.")
+
         student = get_object_or_404(course.students, pk=student_id)
         course.students.remove(student)
         messages.success(request, f"{student.first_name} {student.last_name} has been removed from the course.")
@@ -165,11 +167,11 @@ class RemoveStudentView(PermissionRequiredMixin, View):
         return redirect('course-view', pk=course_id)
 
 
-class BlockStudentView(PermissionRequiredMixin, View):
-    permission_required = Course.get_perm('block_student')
-
+class BlockStudentView(LoginRequiredMixin, View):
     def post(self, request, course_id, student_id):
         course = get_object_or_404(Course, pk=course_id)
+        if not request.user.has_perm(Course.get_perm('block_student'), course):
+            return HttpResponseForbidden("You don't have permission to block students from this course.")
         
         try:
             student = get_user_model().objects.get(pk=student_id)
@@ -192,11 +194,12 @@ class BlockStudentView(PermissionRequiredMixin, View):
         return redirect('course-view', pk=course_id)
 
 
-class AddStudentsView(PermissionRequiredMixin, View):
-    permission_required = Course.get_perm('add_student')
-
+class AddStudentsView(LoginRequiredMixin, View):
     def post(self, request, course_id):
         course = get_object_or_404(Course, pk=course_id)
+        if not request.user.has_perm(Course.get_perm('enroll_student'), course):
+            return HttpResponseForbidden("You don't have permission to add students to this course.")
+
         student_emails = request.POST.get('student_emails', '').split(',')
         student_emails = [re.search(r'[\w\.-]+@[\w\.-]+', email).group() for email in student_emails]
         
@@ -214,12 +217,13 @@ class AddStudentsView(PermissionRequiredMixin, View):
         return redirect('course-view', pk=course_id)
 
 
-class StudentSearchView(PermissionRequiredMixin, View):
-    permission_required = Course.get_perm('enroll_student')
-
+class StudentSearchView(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
         term = request.GET.get('term', '')
         course_id = request.GET.get('course_id')
+        course = get_object_or_404(Course, pk=course_id)
+        if not request.user.has_perm(Course.get_perm('enroll_student'), course):
+            return HttpResponseForbidden("You don't have permission to enroll students in this course.")
         
         User = get_user_model()
         students_group = Group.objects.get(name='students')
@@ -236,11 +240,12 @@ class StudentSearchView(PermissionRequiredMixin, View):
         return JsonResponse(results, safe=False)
 
 
-class CourseEnrollView(PermissionRequiredMixin, View):
-    permission_required = Course.get_perm('enroll_self')
-
+class CourseEnrollView(LoginRequiredMixin, View):
     def post(self, request, course_id):
         course = get_object_or_404(Course, id=course_id)
+        if not request.user.has_perm(Course.get_perm('enroll_self'), course):
+            return HttpResponseForbidden("You don't have permission to enroll in this course.")
+
         user = request.user
 
         if user in course.blocked_students.all():
@@ -256,11 +261,12 @@ class CourseEnrollView(PermissionRequiredMixin, View):
         return redirect('course-view', pk=course_id)
 
 
-class UnblockStudentView(PermissionRequiredMixin, View):
-    permission_required = Course.get_perm('unblock_student')
-
+class UnblockStudentView(LoginRequiredMixin, View):
     def post(self, request, course_id, student_id):
         course = get_object_or_404(Course, pk=course_id)
+        if not request.user.has_perm(Course.get_perm('unblock_student'), course):
+            return HttpResponseForbidden("You don't have permission to unblock students from this course.")
+
         student = get_object_or_404(get_user_model(), pk=student_id)
         course.blocked_students.remove(student)
         messages.success(request, f"{student.first_name} {student.last_name} has been unblocked from the course.")
@@ -333,13 +339,11 @@ class CourseMaterialListView(LoginRequiredMixin, ListView):
         context['course'] = get_object_or_404(Course, pk=self.kwargs['course_id'])
         return context
 
-class AddCourseMaterialView(PermissionRequiredMixin, View):
-    permission_required = Course.get_perm('add_course_material')
-
+class AddCourseMaterialView(LoginRequiredMixin, View):
     def get(self, request, course_id):
         course = get_object_or_404(Course, pk=course_id)
-        if request.user != course.teacher:
-            return redirect('course-view', pk=course_id)
+        if not request.user.has_perm(Course.get_perm('add_course_material'), course):
+            return HttpResponseForbidden("You don't have permission to add course material to this course.")
         
         material_form = CourseMaterialForm()
         lecture_form = LectureForm()
@@ -548,11 +552,12 @@ class CourseSubmissionsView(LoginRequiredMixin, ListView):
         context['course'] = Course.objects.get(pk=self.kwargs['course_id'])
         return context
     
-class ViewSubmissionView(PermissionRequiredMixin, View):
-    permission_required = AssignmentSubmission.get_perm('view')
-
+class ViewSubmissionView(LoginRequiredMixin, View):
     def get(self, request, pk):
         submission = get_object_or_404(AssignmentSubmission, pk=pk)
+        if not request.user.has_perm(AssignmentSubmission.get_perm('view'), submission):
+            return HttpResponseForbidden("You don't have permission to view this submission.")
+
         responses = submission.responses.all()
         is_teacher = request.user == submission.assignment.material.course.teacher
         is_student = request.user == submission.student
@@ -564,11 +569,12 @@ class ViewSubmissionView(PermissionRequiredMixin, View):
         }
         return render(request, 'uniworld/view_submission.html', context)
 
-class GradeSubmissionView(PermissionRequiredMixin, View):
-    permission_required = AssignmentSubmission.get_perm('change')
-
+class GradeSubmissionView(LoginRequiredMixin, View):
     def post(self, request, pk):
         submission = get_object_or_404(AssignmentSubmission, pk=pk)
+        if not request.user.has_perm(AssignmentSubmission.get_perm('change'), submission):
+            return HttpResponseForbidden("You don't have permission to grade this submission.")
+        
         feedback = request.POST.get('feedback')
 
         # Update scores for essay questions

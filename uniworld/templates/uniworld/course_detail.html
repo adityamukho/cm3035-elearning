@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 {% load django_bootstrap5 %}
 {% load rules %}
+{% load custom_filters %}
 
 {% block content %}
     <article class="card shadow mb-4">
@@ -176,24 +177,29 @@
                     {% endif %}
                 </div>
                 <div class="tab-pane fade" id="feedback" role="tabpanel" aria-labelledby="feedback-tab">
-                    <h3 class="h5 mb-3">Leave Feedback</h3>
-                    <form method="post" action="{% url 'course-feedback' course.id %}">
-                        {% csrf_token %}
-                        <div class="mb-3">
-                            <label for="rating" class="form-label">Rating</label>
-                            <div id="rating" class="star-rating">
-                                {% for i in "12345" %}
-                                    <input type="radio" id="star{{ i }}" name="rating" value="{{ i }}">
-                                    <label for="star{{ i }}" title="{{ i }} stars">&#9733;</label>
-                                {% endfor %}
+                    {% has_perm 'uniworld.add_feedback_course' request.user course as can_add_feedback %}
+                    {% if can_add_feedback %}
+                        <h3 class="h5 mb-3">Leave Feedback</h3>
+                        <form method="post" action="{% url 'course-feedback' course.id %}">
+                            {% csrf_token %}
+                            <div class="mb-3">
+                                <label for="rating" class="form-label">Rating</label>
+                                <div id="rating" class="star-rating">
+                                    {% for i in "12345" %}
+                                        <input type="radio" id="star{{ i }}" name="rating" value="{{ i }}">
+                                        <label for="star{{ i }}" title="{{ i }} stars">&#9733;</label>
+                                    {% endfor %}
+                                </div>
                             </div>
-                        </div>
-                        <div class="mb-3">
-                            <label for="comment" class="form-label">Comment</label>
-                            <textarea class="form-control" id="comment" name="comment" rows="3"></textarea>
-                        </div>
-                        <button type="submit" class="btn btn-primary">Submit Feedback</button>
-                    </form>
+                            <div class="mb-3">
+                                <label for="comment" class="form-label">Comment</label>
+                                <textarea class="form-control" id="comment" name="comment" rows="3"></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Submit Feedback</button>
+                        </form>
+                    {% else %}
+                        <p class="text-muted">You must be enrolled in this course to leave feedback.</p>
+                    {% endif %}
                     <h3 class="h5 mt-4 mb-3">Student Feedback</h3>
                     {% if feedback_list %}
                         <ul class="list-group">
@@ -203,9 +209,7 @@
                                         <div>
                                             <strong>{{ feedback.user.first_name }} {{ feedback.user.last_name }}</strong>
                                             <div class="star-rating">
-                                                {% for i in "12345" %}
-                                                    <span class="star{% if i <= feedback.rating %} filled{% else %} unfilled{% endif %}">&#9733;</span>
-                                                {% endfor %}
+                                                {% star_rating feedback.rating %}
                                             </div>
                                             <p>{{ feedback.comment }}</p>
                                         </div>
