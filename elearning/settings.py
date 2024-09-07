@@ -26,6 +26,16 @@ SECRET_KEY = 'django-insecure-+907x9*p47ln6a5f05-*9@)hqj+!y=b%zj0bm(e2qf$hmkytfa
 DEBUG = os.environ.get('DEBUG', False)
 
 ALLOWED_HOSTS = ['localhost', 'cm3035-elearning.onrender.com', 'cm3035-elearning.adityamukho.com']
+CSRF_TRUSTED_ORIGINS = [
+    'http://localhost:8000',
+    'https://cm3035-elearning.onrender.com',
+    'https://cm3035-elearning.adityamukho.com'
+]
+CORS_ORIGIN_WHITELIST = [
+    'http://localhost:8000',
+    'https://cm3035-elearning.onrender.com',
+    'https://cm3035-elearning.adityamukho.com'
+]
 
 # Application definition
 
