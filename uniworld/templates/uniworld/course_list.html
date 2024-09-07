@@ -8,6 +8,7 @@
             <a href="{% url 'courses' %}?filter=my_courses" class="btn btn-secondary me-2">
                 <i class="bi bi-person-circle me-2"></i>My Courses
             </a>
+            {% has_perm 'uniworld.add_course' request.user as can_add_course %}
             {% if can_add_course %}
                 <a href="{% url 'course-create' %}" class="btn btn-primary">
                     <i class="bi bi-plus-circle me-2"></i>Create New Course
