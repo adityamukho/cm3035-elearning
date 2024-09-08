@@ -25,14 +25,12 @@ SECRET_KEY = 'django-insecure-+907x9*p47ln6a5f05-*9@)hqj+!y=b%zj0bm(e2qf$hmkytfa
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', False)
 
-ALLOWED_HOSTS = ['localhost', 'cm3035-elearning.adityamukho.com']
+ALLOWED_HOSTS = ['localhost']
 CSRF_TRUSTED_ORIGINS = [
-    'http://localhost:8000',
-    'https://cm3035-elearning.adityamukho.com'
+    'http://localhost:8000'
 ]
 CORS_ORIGIN_WHITELIST = [
-    'http://localhost:8000',
-    'https://cm3035-elearning.adityamukho.com'
+    'http://localhost:8000'
 ]
 
 # Application definition
